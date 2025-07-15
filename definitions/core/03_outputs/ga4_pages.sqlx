@@ -1,11 +1,7 @@
 config {
     type: "incremental",
     tags: [dataform.projectConfig.vars.GA4_DATASET, "pages", "prod"],
-<<<<<<< HEAD
-    schema: dataform.projectConfig.vars.OUTPUTS_DATASET,
-=======
     schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
->>>>>>> refs/heads/main
     description: "Table containing all captured page views",
     bigquery: {
         partitionBy: "event_date", // To improve query performance and control costs. You can only partition based on one dimension.
@@ -115,12 +111,6 @@ SELECT
   ROUND(AVG(engagement_time_msec)/1000, 2) AS avg_engagement_time_sec
 
 FROM
-<<<<<<< HEAD
-  ${ref("base_ga4_events")}
-WHERE  session_date >= date_checkpoint 
-  -- ${helper_date_range.FilterDate}
-  AND event_name = 'page_view'
-=======
   ${ref("ga4_pageviews")}
 WHERE  event_date >= date_checkpoint 
 -- only hits with user_pseudo_id and session_id
@@ -128,7 +118,7 @@ WHERE  event_date >= date_checkpoint
   and session_id is not null
   group by all
 )
->>>>>>> refs/heads/main
+
 
 select * 
 from query_source

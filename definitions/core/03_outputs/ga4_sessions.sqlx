@@ -70,11 +70,8 @@ with events as (
     ${helpers.generateArrayAggSQL('user_id',false, false)}, -- to account for potentially multiple
 
     -- min(table_suffix) as table_suffix,
-<<<<<<< HEAD
-    -- count(distinct table_suffix) > 1 as is_multiday_session,  -- for later AZ
-=======
+
     count(distinct table_suffix) > 1 as is_multiday_session,  -- for later AZ
->>>>>>> refs/heads/main
 
     -- first
     ${helpers.generateArrayAggSQL('device')},
@@ -84,26 +81,7 @@ with events as (
 
     --  traffic info
     -- ${helpers.generateArrayAggSQL('session_traffic_source_last_click', 'session_traffic_source_last_click')} ,
-<<<<<<< HEAD
-     
-    ${helpers.generateArrayAggSQL('page.location','landing_page')}  ,
-    ${helpers.generateArrayAggSQL('page.location','exit_page', false)} ,
-=======
     ${helpers.generateArrayAggSQL('session_traffic_source_last_click.cross_channel_campaign', 'cross_channel_campaign')} ,
->>>>>>> refs/heads/main
-
-<<<<<<< HEAD
-    ${helpers.generateArrayAggSQL('session_traffic_source_last_click.cross_channel_campaign', 'cross_channel_campaign')} ,
-    -- struct(
-    --   ${helpers.generateArrayAggSQL('page.location','landing_page_location')},
-    --   ${helpers.generateArrayAggSQL('page.path','landing_page_path')},
-    --   ${helpers.generateArrayAggSQL('page.hostname','landing_page_hostname')},
-    --   ${helpers.generateArrayAggSQL('page.referrer','landing_page_referrer')},
-    --   ${helpers.generateArrayAggSQL('event_params.content_group','landing_content_group')}
-    -- ) as landing_page,
-=======
-    -- ${helpers.generateArrayAggSQL('page.location','landing_page_location')}  ,
-    -- ${helpers.generateArrayAggSQL('page.location','exit_page', false)} ,
 
     struct(
       ${helpers.generateArrayAggSQL('page.location','landing_page_location')},
@@ -119,7 +97,6 @@ with events as (
       ${helpers.generateArrayAggSQL('page.hostname','exit_page_hostname', false)},
       ${helpers.generateArrayAggSQL('event_params.content_group','exit_content_group', false)}
     ) as exit_page,
->>>>>>> refs/heads/main
 
     -- these will be packaged to a single struct later
     -- ${helpers.generateTrafficSourceSQL('fixed_traffic_source','first_traffic_source')},
@@ -127,16 +104,6 @@ with events as (
     -- ${helpers.generateClickIdTrafficSourceSQL('click_ids',config.CLICK_IDS_ARRAY,'first_click_ids')},
     -- ${helpers.generateClickIdTrafficSourceSQL('click_ids',config.CLICK_IDS_ARRAY,'last_click_ids', false)},
 
-<<<<<<< HEAD
-    -- min(event_params.ga_session_number) as ga_session_number, -- could be NULL when hit comes from MP
-    
-    -- min(event_date) as session_date,
-    -- min(time.event_timestamp_utc) as session_start_timestamp_utc,
-    -- max(time.event_timestamp_utc) as session_end_timestamp_utc,
-    -- sum(event_params.engagement_time_msec) as engagement_time_msec,
-
-        logical_or(event_params.session_engaged = 1) as is_engaged_session,
-=======
         min(event_params.ga_session_number) as ga_session_number, -- could be NULL when hit comes from MP
         CASE 
           WHEN min(event_params.ga_session_number) = 1 THEN 'new user'
@@ -145,21 +112,11 @@ with events as (
         END AS user_type,
         
         logical_or(event_params.session_engaged = "1") as is_engaged_session,
->>>>>>> refs/heads/main
         min(timestamp_micros(event_timestamp)) as session_start_timestamp_utc,
         max(timestamp_micros(event_timestamp)) as session_end_timestamp_utc,
         sum(cast(event_params.engagement_time_msec as int64)) as engagement_time_msec,
-<<<<<<< HEAD
         count(event_name) events,
         countif(event_name="page_view") pageviews,
-=======
->>>>>>> refs/heads/main
-
-<<<<<<< HEAD
-=======
-        count(event_name) events,
-        countif(event_name="page_view") pageviews,
->>>>>>> refs/heads/main
         sum(if(event_name="purchase", ecommerce.purchase_revenue, 0)) purchase_revenue,
         sum(if(event_name="purchase", ecommerce.total_item_quantity,0)) total_item_quantity,
         sum(if(event_name="purchase", ecommerce.unique_items,0)) unique_items, 
@@ -219,61 +176,6 @@ add_meta_info as (
     -- cross_channel_campaign.*
   from events
 )
-
--- add_meta_info as (
---   select
---     * except (
---         source,
---         source_category,
---         session_start_timestamp_utc,
---         session_end_timestamp_utc,
---         engagement_time_msec,
---         first_traffic_source,
---         last_traffic_source,
---         first_click_ids,
---         last_click_ids
---         ),
---     struct(
---       session_start_timestamp_utc,
---       session_end_timestamp_utc,
---       engagement_time_msec,
---       timestamp_diff(session_end_timestamp_utc, session_start_timestamp_utc, second) as session_duration_s
---     ) as time,
---     (
---      select as struct
---       (
---         select as struct
---         first_traffic_source.*,
---         first_click_ids.*,
---         ${helpers.getDefaultChannelGroupingSQL(config,
---                                             'first_traffic_source.source',
---                                             'first_traffic_source.medium',
---                                             'first_traffic_source.campaign',
---                                             'join_first.source_category',
---                                             'first_traffic_source.term',
---                                             'first_traffic_source.content',
---                                             'first_traffic_source.campaign_id'
---                                             )} as default_channel_grouping,
---         ) first,
---       (
---         select as struct
---         last_traffic_source.*,
---         last_click_ids.*,
---         ${helpers.getDefaultChannelGroupingSQL(config,
---                                             'last_traffic_source.source',
---                                             'last_traffic_source.medium',
---                                             'last_traffic_source.campaign',
---                                             'join_last.source_category',
---                                             'last_traffic_source.term',
---                                             'last_traffic_source.content',
---                                             'last_traffic_source.campaign_id'
---                                             )} as default_channel_grouping
---       ) last
---     ) session_source,
-
---     cross_channel_campaign.*
---   from events
--- )
 
 select
   *  --except(is_multiday_session)

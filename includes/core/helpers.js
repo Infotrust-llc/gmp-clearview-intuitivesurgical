@@ -121,11 +121,6 @@ const generateParamsSQL_fake  = (config_array, column = "event_params") => {
 
   };
 const generateParamsSQL = (config_array, column = "event_params") => {
-<<<<<<< HEAD
-  console.log(config_array);
-=======
-  console.log("alina");
->>>>>>> refs/heads/main
   return `
       ${config_array
         .map((config) => {
@@ -723,12 +718,8 @@ const helpers = {
   storageUpdateLabels,
   generateAlterTableStatements,
   getSqlSelectEventsAsMetrics,
-<<<<<<< HEAD
-  getSqlPivotEventParams
-=======
   getSqlPivotEventParams,
   generateParamsSQL_fake
->>>>>>> refs/heads/main
 };
 
 module.exports = {
