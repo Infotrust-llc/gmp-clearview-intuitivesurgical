@@ -67,11 +67,7 @@ pre_operations {
       SELECT
         MAX(PARSE_DATE('%Y%m%d', event_date))
       FROM
-<<<<<<< HEAD
-        ${ref("events_*")}
-=======
         ${ref("events" || dataform.projectConfig.vars.TABLE_SUFFIX || "_*")}
->>>>>>> refs/heads/main
       WHERE
         CONTAINS_SUBSTR(_TABLE_SUFFIX, 'intraday') IS FALSE) );
   IF
@@ -86,11 +82,7 @@ pre_operations {
   INSERT INTO
     ${ref("assertion_logs")}
   VALUES
-<<<<<<< HEAD
-    (CURRENT_TIMESTAMP(), assertion, '${ref("events_*")}', expectations, check, sample, assertion_status, error_msg);
-=======
     (CURRENT_TIMESTAMP(), assertion, '${ref("events" || dataform.projectConfig.vars.TABLE_SUFFIX || "_*")}', expectations, check, sample, assertion_status, error_msg);
->>>>>>> refs/heads/main
   END IF
 }
 
