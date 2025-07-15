@@ -17,18 +17,15 @@ config {
   }
 }
 
-
-
 js {
   const { helpers } = require("includes/core/helpers");
   const config = helpers.getConfig();
   /* check if there's invalid columns or dupe columns in the custom column definitions */
   helpers.checkColumnNames(config);
-  const fieldnames_sql = helpers.getEventParamKeysArray(config, ref("events_*"), "event_params");
+  const fieldnames_sql = helpers.getEventParamKeysArray(config, ref("events_fresh_*"), "event_params");
   const base_tbl = self();
 
 }
-
 
 /* incrementality */
 pre_operations {
@@ -56,7 +53,8 @@ with query_source as (
     select
       _table_suffix as table_suffix,
       *
-    from ${ref("events_*")}
+    from ${ref("events_fresh_*")}
+
     where true
 
     -- incrementality clause
@@ -85,7 +83,6 @@ with query_source as (
 step1 as (
 
   select
-    '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
     -- first chunk: the basics
     event_timestamp,
     event_name,
@@ -564,6 +561,7 @@ fixed as (
 
 add_meta_info as (
   select
+      '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
       -- make session_id - can be NULL (if anonymous ping or MP hit without session_id)
     -- farm_fingerprint(
     --   user_pseudo_id || event_params.ga_session_id
@@ -598,6 +596,9 @@ add_meta_info as (
        regexp_extract(event_params.page_location, r'^(?:(?:[^:\/?#]+):)?(?:\/\/(?:[^\/?#]*))?([^?#]*)(?:\?(?:[^#]*))?(?:#(?:.*))?') as path,
        event_params.page_referrer as referrer,
        event_params.page_title as title
+      --  event_params.content_type as content_type,
+      --  event_params.content_id as content_id,
+      --  event_params.content_group as content_group
       ) as page,
 
     -- is this a hit with source? Or: not direct/none or when we have a source or medium

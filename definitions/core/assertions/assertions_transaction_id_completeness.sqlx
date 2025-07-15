@@ -2,7 +2,11 @@ config {
     type: "table",
     schema: dataform.projectConfig.vars.QUALITY_DATASET,
     description: "transaction id should not be null or not set",
+<<<<<<< HEAD
     dependencies: ["assertion_logs", "events_*"],
+=======
+    dependencies: ["assertion_logs", "events" || dataform.projectConfig.vars.TABLE_SUFFIX || "_*"],
+>>>>>>> refs/heads/main
     tags:[dataform.projectConfig.vars.GA4_DATASET, "assertions"],
 }
 js {
@@ -40,7 +44,11 @@ pre_operations {
       SELECT
         ecommerce.transaction_id AS transaction_id
       FROM
+<<<<<<< HEAD
         ${ref("events_*")}
+=======
+        ${ref("events" || dataform.projectConfig.vars.TABLE_SUFFIX || "_*")}
+>>>>>>> refs/heads/main
       WHERE
         event_name = 'purchase'
         AND (ecommerce.transaction_id = '(not set)'
@@ -59,7 +67,11 @@ pre_operations {
   INSERT INTO
     ${ref("assertion_logs")}
   VALUES
+<<<<<<< HEAD
     (CURRENT_TIMESTAMP(), assertion, '${ref("events_*")}', expectations, check, sample, assertion_status, error_msg);
+=======
+    (CURRENT_TIMESTAMP(), assertion, '${ref("events" || dataform.projectConfig.vars.TABLE_SUFFIX || "_*")}', expectations, check, sample, assertion_status, error_msg);
+>>>>>>> refs/heads/main
   END IF
 }
 

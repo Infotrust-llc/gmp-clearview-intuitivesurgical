@@ -9,4 +9,6 @@ vars:
   TRANSFORMATIONS_DATASET: gmp_base 
   OUTPUTS_DATASET: gmp_outputs 
   REPORTING_DATASET: gmp_reporting 
+  INPUT_PROJECT: intuitive-web-ga4-bigquery
+  TABLE_SUFFIX: ""
 
