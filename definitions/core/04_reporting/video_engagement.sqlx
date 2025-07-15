@@ -1,5 +1,5 @@
 config {
-  type: "incremental",
+  type: "view",
   tags: [dataform.projectConfig.vars.GA4_DATASET,"events","prod"],
   schema: dataform.projectConfig.vars.OUTPUTS_DATASET,
   description: "Output events table: unnested, cleaned, clustered data with several fixes",
@@ -12,7 +12,7 @@ config {
 }
     select
       *
-    from ${ref("base_ga4_events")}
+    from ${ref("ga4_pages")}
     where event_name IN [
 "carousel_click",
 "accordion_click",
