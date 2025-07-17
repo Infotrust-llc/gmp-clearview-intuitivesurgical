@@ -67,9 +67,12 @@ with events as (
     stream_id,
     user_pseudo_id, 
     max(is_active_user) is_active_user,
+
+    -- last
     ${helpers.generateArrayAggSQL('user_id',false, false)}, -- to account for potentially multiple
 
     -- min(table_suffix) as table_suffix,
+
     count(distinct table_suffix) > 1 as is_multiday_session,  -- for later AZ
 
     -- first
@@ -81,9 +84,6 @@ with events as (
     --  traffic info
     -- ${helpers.generateArrayAggSQL('session_traffic_source_last_click', 'session_traffic_source_last_click')} ,
     ${helpers.generateArrayAggSQL('session_traffic_source_last_click.cross_channel_campaign', 'cross_channel_campaign')} ,
-
-    -- ${helpers.generateArrayAggSQL('page.location','landing_page_location')}  ,
-    -- ${helpers.generateArrayAggSQL('page.location','exit_page', false)} ,
 
     struct(
       ${helpers.generateArrayAggSQL('page.location','landing_page_location')},
@@ -113,11 +113,10 @@ with events as (
           ELSE NULL
         END AS user_type,
         
-        logical_or(event_params.session_engaged = "1") as is_engaged_session,
+        logical_or(event_params.session_engaged = 1) as is_engaged_session,
         min(timestamp_micros(event_timestamp)) as session_start_timestamp_utc,
         max(timestamp_micros(event_timestamp)) as session_end_timestamp_utc,
         sum(cast(event_params.engagement_time_msec as int64)) as engagement_time_msec,
-
         count(event_name) events,
         countif(event_name="page_view") pageviews,
         sum(if(event_name="purchase", ecommerce.purchase_revenue, 0)) purchase_revenue,
@@ -179,61 +178,6 @@ add_meta_info as (
     -- cross_channel_campaign.*
   from events
 )
-
--- add_meta_info as (
---   select
---     * except (
---         source,
---         source_category,
---         session_start_timestamp_utc,
---         session_end_timestamp_utc,
---         engagement_time_msec,
---         first_traffic_source,
---         last_traffic_source,
---         first_click_ids,
---         last_click_ids
---         ),
---     struct(
---       session_start_timestamp_utc,
---       session_end_timestamp_utc,
---       engagement_time_msec,
---       timestamp_diff(session_end_timestamp_utc, session_start_timestamp_utc, second) as session_duration_s
---     ) as time,
---     (
---      select as struct
---       (
---         select as struct
---         first_traffic_source.*,
---         first_click_ids.*,
---         ${helpers.getDefaultChannelGroupingSQL(config,
---                                             'first_traffic_source.source',
---                                             'first_traffic_source.medium',
---                                             'first_traffic_source.campaign',
---                                             'join_first.source_category',
---                                             'first_traffic_source.term',
---                                             'first_traffic_source.content',
---                                             'first_traffic_source.campaign_id'
---                                             )} as default_channel_grouping,
---         ) first,
---       (
---         select as struct
---         last_traffic_source.*,
---         last_click_ids.*,
---         ${helpers.getDefaultChannelGroupingSQL(config,
---                                             'last_traffic_source.source',
---                                             'last_traffic_source.medium',
---                                             'last_traffic_source.campaign',
---                                             'join_last.source_category',
---                                             'last_traffic_source.term',
---                                             'last_traffic_source.content',
---                                             'last_traffic_source.campaign_id'
---                                             )} as default_channel_grouping
---       ) last
---     ) session_source,
-
---     cross_channel_campaign.*
---   from events
--- )
 
 select
   *  --except(is_multiday_session)

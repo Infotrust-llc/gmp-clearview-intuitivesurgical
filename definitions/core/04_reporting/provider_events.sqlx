@@ -1,0 +1,24 @@
+config {
+  type: "view",
+  tags: [dataform.projectConfig.vars.GA4_DATASET,"events","dev"],
+  schema: dataform.projectConfig.vars.OUTPUTS_DATASET,
+  description: "Output events table: unnested, cleaned, clustered data with several fixes",
+  bigquery: {
+    partitionBy: "event_date",
+    clusterBy: ["event_name", "event_id"],
+    labels: require("includes/core/helpers.js").helpers.storageLabels()
+  },
+    columns: require("includes/core/documentation/helpers.js").ga4Events
+}
+    select
+      *
+    from ${ref("base_ga4_events")}
+    where event_name IN [
+"provider_locator_cta_click",
+"provider_locator_tel_click",
+"provider_locator_mailto_click",
+"provider_locator_get_directions_click",
+"provider_locator_search",
+"provider_locator_search_result_selected"
+]
+
