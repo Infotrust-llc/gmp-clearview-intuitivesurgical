@@ -6,9 +6,9 @@ vars:
   GA4_DATASET: analytics_273569072
   LOCAL_TIMEZONE: America/New_York
   QUALITY_DATASET: gmp_quality
-  TRANSFORMATIONS_DATASET: gmp_base 
+  TRANSFORMATIONS_DATASET: gmp_base_273569072 
   OUTPUTS_DATASET: gmp_outputs 
-  REPORTING_DATASET: gmp_reporting 
+  REPORTING_DATASET: gmp_reporting_273569072 
   INPUT_PROJECT: intuitive-web-ga4-bigquery
-  TABLE_SUFFIX: ""
+  TABLE_SUFFIX:  _
 

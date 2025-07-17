@@ -8,7 +8,7 @@
 declare({
     database: dataform.projectConfig.vars.INPUT_PROJECT,
     schema: dataform.projectConfig.vars.GA4_DATASET,
-    name: 'events' || dataform.projectConfig.vars.TABLE_SUFFIX || "_*"
+    name: 'events_*'  //|| dataform.projectConfig.vars.TABLE_SUFFIX || "*"
 });
 // declare({
 //     database: dataform.projectConfig.defaultProject,

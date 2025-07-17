@@ -1,6 +1,6 @@
 config {
   type: "view",
-  tags: [dataform.projectConfig.vars.GA4_DATASET,"events","prod"],
+  tags: [dataform.projectConfig.vars.GA4_DATASET,"events","dev"],
   schema: dataform.projectConfig.vars.OUTPUTS_DATASET,
   description: "Output events table: unnested, cleaned, clustered data with several fixes",
   bigquery: {
@@ -12,8 +12,8 @@ config {
 }
     select
       *
-    from ${ref("ga4_pages")}
-    where event_name IN [
+    from ${ref("ga4_events")}
+    where event_name IN ( 
 "carousel_click",
 "accordion_click",
 "navigation_click",
@@ -22,4 +22,4 @@ config {
 "form_submission_complete",
 "outbound_mailto_link_click",
 "file_download"
-]
+    )

@@ -67,6 +67,8 @@ with events as (
     stream_id,
     user_pseudo_id, 
     max(is_active_user) is_active_user,
+
+    -- last
     ${helpers.generateArrayAggSQL('user_id',false, false)}, -- to account for potentially multiple
 
     -- min(table_suffix) as table_suffix,
@@ -111,7 +113,7 @@ with events as (
           ELSE NULL
         END AS user_type,
         
-        logical_or(event_params.session_engaged = "1") as is_engaged_session,
+        logical_or(event_params.session_engaged = 1) as is_engaged_session,
         min(timestamp_micros(event_timestamp)) as session_start_timestamp_utc,
         max(timestamp_micros(event_timestamp)) as session_end_timestamp_utc,
         sum(cast(event_params.engagement_time_msec as int64)) as engagement_time_msec,
