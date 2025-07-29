@@ -12,7 +12,7 @@ config {
 }
     select
       *
-    from ${ref("ga4_events")}
+    from ${ref("ga4_engagements")}
     where event_name IN ( 
 "carousel_click",
 "accordion_click",
