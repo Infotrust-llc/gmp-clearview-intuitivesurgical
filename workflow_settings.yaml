@@ -2,7 +2,7 @@ defaultAssertionDataset:  gmp_quality
 defaultLocation: US
 defaultProject: intuitive-web-ga4-bigquery
 vars:
-  OUTPUT_PROJECT: pd-strategy
+  OUTPUT_PROJECT: intuitive-web-ga4-bigquery
   GA4_DATASET: analytics_273569072
   LOCAL_TIMEZONE: America/New_York
   QUALITY_DATASET: gmp_quality
@@ -11,4 +11,5 @@ vars:
   REPORTING_DATASET: gmp_reporting_273569072 
   INPUT_PROJECT: intuitive-web-ga4-bigquery
   TABLE_SUFFIX:  _
+  GCS_BUCKET: gmp_clearview_export
 

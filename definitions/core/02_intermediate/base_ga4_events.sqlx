@@ -28,7 +28,7 @@ js {
 }
 
 /* incrementality */
-pre_operations {
+--pre_operations {
   -- declare params string default (${json_custom_params}); 
   declare date_checkpoint DATE;
   -- set @@query_label = "${helpers.executionLabels()}";
@@ -46,7 +46,7 @@ pre_operations {
       `delete from ${self()} where event_date >= date_checkpoint`
       )
   }
-}
+--}
 
 with query_source as (
 
@@ -59,7 +59,7 @@ with query_source as (
 
     -- incrementality clause
     -- and parse_date('%Y%m%d', regexp_extract(event_date,'[0-9]+')) >= date_checkpoint -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
-    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint
+    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) = date_checkpoint
     -- filters go here
 
     -- intraday filter: exclude
@@ -617,5 +617,19 @@ select
 from add_row_numbers
 where true
 
+post_operations {
+  ${when(incremental(),
+    `EXPORT DATA OPTIONS(
+        uri=(CONCAT('gs://${config.GCS_BUCKET}/', date_checkpoint, '/${self().name}_',date_checkpoint, '_*.json')), 
+        format='JSON',
+        overwrite=true,
+        header=true
+       ) AS
 
+          SELECT DISTINCT * FROM (        -- Overhead SLEECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+          SELECT * FROM ${self()} WHERE event_date = date_checkpoint
+          )
+          ORDER BY _run_timestamp LIMIT 1000000000000000000`
+  )
+  }
 

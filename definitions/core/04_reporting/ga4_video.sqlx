@@ -1,0 +1,59 @@
+config {
+  type: "incremental",
+  tags: [dataform.projectConfig.vars.GA4_DATASET,"video","prod"],
+  database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+  schema: dataform.projectConfig.vars.REPORTING_DATASET,
+  description: "Video events table: with metrics",
+  bigquery: {
+    partitionBy: "event_date",
+    //clusterBy: ["event_name", "event_id"],
+    labels: require("includes/core/helpers.js").helpers.storageLabels()
+  },
+    columns: require("includes/core/documentation/helpers.js").ga4Events
+}
+
+
+SELECT * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, video_impression_count,
+        video_complete_count,  video_start_count, video_watch_time, video_start, video_complete),
+
+        COUNT(DISTINCT session_id) sessions,
+        COUNT(DISTINCT user_pseudo_id) users,
+        -- SUM(video_impression_count) video_impression_count,
+        SUM(video_watch_time) video_watch_time,
+        SUM(video_start_count) video_start_count,
+        SUM(video_complete_count) video_complete_count,
+        SUM(engagement_time_msec)/1000 engagement_time_sec,
+        SUM(video_start) video_start,
+        SUM(video_complete) video_complete
+FROM (
+    SELECT * FROM  (
+        SELECT  event_name,
+        event_date, session_id, user_pseudo_id, 
+        continent, country, region, city, 
+        page_location, cross_channel_campaign.default_channel_group,
+
+        location, header,
+        video_title, 
+        video_provider,
+        video_url,
+        video_play_type,
+        video_duration,
+        video_percent,
+        video_current_time,
+    
+        --Metrics
+        video_impression_count,
+        video_complete_count,
+        video_start_count,
+        video_watch_time,
+        engagement_time_msec
+
+        FROM ${ref("ga4_engagements")}
+        WHERE event_name IN ("video_start", "video_complete")
+    )
+        PIVOT 
+        (
+          COUNT(*) FOR event_name IN ("video_start", "video_complete")
+        )
+)
+group by all

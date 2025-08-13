@@ -1,0 +1,83 @@
+config {
+  type: "incremental",
+  uniqueKey: ['session_id'],
+  description: "Output table for understanding daily overall performance",
+  database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+    schema: dataform.projectConfig.vars.REPORTING_DATASET,
+  tags:[dataform.projectConfig.vars.GA4_DATASET,"daily_performance","prod"],
+  bigquery: {
+    partitionBy: "session_date"
+    // labels: require("includes/core/helpers.js").helpers.storageLabels()
+  },
+}
+
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select
+        coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
+      from ${self()}
+      where is_final = true`,
+    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+    -- delete some older data, since this may be updated later by GA4
+  ${
+    when(incremental(),
+      `delete from ${self()} where session_date >= date_checkpoint`
+      )
+  }
+}
+    select
+      session_date,
+      stream_id,
+      device,
+      geo,
+      app_info,
+      platform,
+      cross_channel_campaign,
+      landing_page,
+      exit_page,
+      user_type,
+      count(distinct session_id) as sessions,
+      countif(is_engaged_session) as engaged_sessions,
+      count(distinct user_pseudo_id) as users,
+      countif(is_active_user) as is_active_user,
+      sum(events) as events,
+      sum(pageviews) as pageviews,
+      sum(purchase_revenue) as purchase_revenue,
+      sum(total_item_quantity) as total_item_quantity,
+      sum(unique_items) as unique_items,
+      sum(transactions) as transactions,
+      sum(cta_click) as cta_clicks,
+      sum(form_submission_complete) as form_submission_complete,
+      sum(internal_link_click) as internal_link_click,
+      sum(provider_locator_cta_click) as provider_locator_cta_click,
+      sum(provider_locator_get_directions_click) as provider_locator_get_directions_click,
+      sum(provider_locator_mailto_click) as provider_locator_mailto_click,
+      sum(provider_locator_search) as provider_locator_search,
+      sum(provider_locator_search_result_selected) as provider_locator_search_result_selected,
+      sum(provider_locator_tel_click) as provider_locator_tel_click,
+      sum(video_complete) as video_complete,
+      sum(video_start ) as video_start,
+    from ${ref("ga4_sessions")}
+    group by 
+     session_date,
+      stream_id,
+      device,
+      geo,
+      app_info,
+      platform,
+      cross_channel_campaign,
+      landing_page,
+      exit_page,
+      user_type
+    
+

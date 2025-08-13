@@ -41,7 +41,7 @@ const lowerSQL = helpers.lowerSQL;
 const customConfig = {
   // on a new or full build, this start date will be picked
 
-  GA4_START_DATE: "2025-06-01",
+  GA4_START_DATE: "2025-07-01",
 
   // custom definitions
   // a very complete list of all recommended and standard event parameters is
@@ -72,23 +72,307 @@ const customConfig = {
   CUSTOM_EVENT_PARAMS_ARRAY: [
   // example set: this will populate 5 fields in the `event_params_custom` column in the `ga4_events` table
   // known limitation: the output column names must be valid. use letters and underscores to be safe 
-    {  type: "string",  name: "application_status" },
-    {  type: "string",  name: "monetate_id" },
-    {  type: "string",  name: "order_discount" },
-    {  type: "string",  name: "personalization_value" },
-    {  type: "string",  name: "fullfillment_method" },
-    {  type: "string",  name: "monetate_status" },
-    {  type: "string",  name: "coupon" },
-    {  type: "string",  name: "page_type" },
-    {  type: "string",  name: "checkout_type" },
-    {  type: "string",  name: "communication_type" },
-    {  type: "string",  name: "group_type" },
-    {  type: "string",  name: "interaction_type" },
-    {  type: "string",  name: "search_type" },
-    {  type: "string",  name: "video_current_type" },
-    {  type: "string",  name: "nav_type" },
-    {  type: "string",  name: "payment_type" }
-],
+{
+  "name": "source",
+  "type": "string"
+}, {
+  "name": "ga_session_id",
+  "type": "int"
+}, {
+  "name": "term",
+  "type": "string"
+}, {
+  "name": "internal_link_click_count",
+  "type": "int"
+}, {
+  "name": "unique_search_term",
+  "type": "int"
+}, {
+  "name": "video_title",
+  "type": "string"
+}, {
+  "name": "provider_search",
+  "type": "string"
+}, {
+  "name": "provider_distance",
+  "type": "int"
+}, {
+  "name": "provider_search_result_selected_count",
+  "type": "int"
+}, {
+  "name": "provider_search_result",
+  "type": "string"
+}, {
+  "name": "link_classes",
+  "type": "string"
+}, {
+  "name": "form_name",
+  "type": "string"
+}, {
+  "name": "current_page",
+  "type": "int"
+}, {
+  "name": "ga_session_number",
+  "type": "int"
+}, {
+  "name": "link_type",
+  "type": "string"
+}, {
+  "name": "link_format",
+  "type": "string"
+}, {
+  "name": "video_provider",
+  "type": "string"
+}, {
+  "name": "carousel_action",
+  "type": "string"
+}, {
+  "name": "provider_location",
+  "type": "int"
+}, {
+  "name": "file_download_count",
+  "type": "int"
+}, {
+  "name": "outbound_mailto_link_click_count",
+  "type": "int"
+}, {
+  "name": "navigation_direction",
+  "type": "string"
+}, {
+  "name": "content_language",
+  "type": "string"
+}, {
+  "name": "batch_page_id",
+  "type": "int"
+}, {
+  "name": "timestamp",
+  "type": "string"
+}, {
+  "name": "gtm_tag_name",
+  "type": "string"
+}, {
+  "name": "gtm_container_version",
+  "type": "int"
+}, {
+  "name": "session_engaged",
+  "type": "int"
+}, {
+  "name": "sort_by",
+  "type": "string"
+}, {
+  "name": "search_result_selected_count",
+  "type": "int"
+}, {
+  "name": "cta_type",
+  "type": "int"
+}, {
+  "name": "video_complete_count",
+  "type": "int"
+}, {
+  "name": "video_watch_time",
+  "type": "int"
+}, {
+  "name": "robotic_program_procedure",
+  "type": "string"
+}, {
+  "name": "gclsrc",
+  "type": "string"
+}, {
+  "name": "external_referrer",
+  "type": "string"
+}, {
+  "name": "percent_scrolled",
+  "type": "int"
+}, {
+  "name": "video_play_type",
+  "type": "string"
+}, {
+  "name": "video_current_time",
+  "type": "int"
+}, {
+  "name": "outbound_tel_link_click_count",
+  "type": "int"
+}, {
+  "name": "file_name",
+  "type": "string"
+}, {
+  "name": "outbound_general_link_click_count",
+  "type": "int"
+}, {
+  "name": "outbound_social_link_click_count",
+  "type": "int"
+}, {
+  "name": "search_filter",
+  "type": "string"
+}, {
+  "name": "debug_mode",
+  "type": "int"
+}, {
+  "name": "client_id_2",
+  "type": "string"
+}, {
+  "name": "header",
+  "type": "int"
+}, {
+  "name": "ignore_referrer",
+  "type": "string"
+}, {
+  "name": "click_url",
+  "type": "string"
+}, {
+  "name": "num_search_results",
+  "type": "int"
+}, {
+  "name": "video_url",
+  "type": "int"
+}, {
+  "name": "outbound",
+  "type": "string"
+}, {
+  "name": "gad_campaignid",
+  "type": "string"
+}, {
+  "name": "search_term",
+  "type": "decimal"
+}, {
+  "name": "outbound_link_type",
+  "type": "string"
+}, {
+  "name": "link_text",
+  "type": "string"
+}, {
+  "name": "link_url",
+  "type": "string"
+}, {
+  "name": "gtm_container_id",
+  "type": "string"
+}, {
+  "name": "milestone",
+  "type": "int"
+}, {
+  "name": "gclid",
+  "type": "string"
+}, {
+  "name": "search_result",
+  "type": "string"
+}, {
+  "name": "video_duration",
+  "type": "int"
+}, {
+  "name": "video_percent",
+  "type": "int"
+}, {
+  "name": "campaign_id",
+  "type": "string"
+}, {
+  "name": "filter_specialty",
+  "type": "string"
+}, {
+  "name": "batch_ordering_id",
+  "type": "int"
+}, {
+  "name": "previous_url",
+  "type": "string"
+}, {
+  "name": "firebase_conversion",
+  "type": "int"
+}, {
+  "name": "user_agent_string",
+  "type": "string"
+}, {
+  "name": "entrances",
+  "type": "int"
+}, {
+  "name": "engagement_time_msec",
+  "type": "int"
+}, {
+  "name": "search_type",
+  "type": "string"
+}, {
+  "name": "video_start_count",
+  "type": "int"
+}, {
+  "name": "video_impression_count",
+  "type": "int"
+}, {
+  "name": "robotic_program_surgeon_selected_count",
+  "type": "int"
+}, {
+  "name": "form_submission_complete_count",
+  "type": "int"
+}, {
+  "name": "form_submission_attempt_count",
+  "type": "int"
+},  {
+  "name": "form_submission_failure_count",
+  "type": "int"
+},{
+  "name": "link_id",
+  "type": "string"
+}, {
+  "name": "medium",
+  "type": "string"
+}, {
+  "name": "page_title",
+  "type": "string"
+}, {
+  "name": "campaign",
+  "type": "string"
+}, {
+  "name": "location",
+  "type": "string"
+}, {
+  "name": "click_text",
+  "type": "string"
+}, {
+  "name": "traffic_type",
+  "type": "string"
+}, {
+  "name": "search_count",
+  "type": "int"
+}, {
+  "name": "content",
+  "type": "string"
+}, {
+  "name": "provider_procedure",
+  "type": "string"
+}, {
+  "name": "link_domain",
+  "type": "string"
+}, {
+  "name": "filter_product",
+  "type": "string"
+}, {
+  "name": "robotic_program_surgeon",
+  "type": "string"
+}, {
+  "name": "page_location",
+  "type": "string"
+}, {
+  "name": "engaged_session_event",
+  "type": "int"
+}, {
+  "name": "page_referrer",
+  "type": "string"
+}, {
+  "name": "gad_source",
+  "type": "string"
+}, {
+  "name": "cta_text",
+  "type": "string"
+}, {
+  "name": "file_extension",
+  "type": "string"
+}, {
+  "name": "cta_url",
+  "type": "string"
+}, {
+  "name": "previous_page",
+  "type": "int"
+}, {
+  "name": "filter_page_types",
+  "type": "string"
+}],
 
   // user properties
   // example:
@@ -120,7 +404,9 @@ CUSTOM_USER_PROPERTIES_ARRAY: [
   //      { name: "s", cleaningMethod: lowerSQL },
   //      { name: "search",cleaningMethod: lowerSQL }
   //   ],
-  CUSTOM_URL_PARAMS_ARRAY: [],
+
+
+  CUSTOM_URL_PARAMS_ARRAY: [    { name: "location", cleaningMethod: lowerSQL }],
 
   // filters
   // array: list the event names you want to exclude from the events table 
@@ -131,7 +417,8 @@ CUSTOM_USER_PROPERTIES_ARRAY: [
   HOSTNAME_INCLUDE_ONLY: [],
 
 // Key events to include as metrics. up to 5
-  KEY_EVENTS_ARRAY: ["select_content","GMP_form_send","form_submit","form_send","file_download","Contact_InfoTrust_form_send"],
+  KEY_EVENTS_ARRAY: ["cta_click","form_submission_complete","internal_link_click","page_view","provider_locator_cta_click","provider_locator_get_directions_click",
+                  "provider_locator_mailto_click", "provider_locator_search", "provider_locator_search_result_selected", "provider_locator_tel_click", "video_complete", "video_start"],
 
   // Set this to true to enable "Organic AI" (and possible other future channels that
   // are not compatible with GA4)
@@ -166,7 +453,10 @@ CUSTOM_USER_PROPERTIES_ARRAY: [
   // check for a transaction IDs on a purchase?
   ASSERTIONS_TRANSACTION_ID_COMPLETENESS: false,
   // check for cookies on all hits? (note: cookieless pings will trigger a fail)
-  ASSERTIONS_USER_PSEUDO_ID_COMPLETENESS: false
+  ASSERTIONS_USER_PSEUDO_ID_COMPLETENESS: false,
+
+  //GCS bucketlist 
+ GCS_BUCKET : ["gmp_clearview_export"]
 
 }
 

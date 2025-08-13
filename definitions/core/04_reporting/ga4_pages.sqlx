@@ -2,7 +2,7 @@ config {
     type: "incremental",
     tags: [dataform.projectConfig.vars.GA4_DATASET, "pages", "prod"],
     database: dataform.projectConfig.vars.OUTPUT_PROJECT,
-    schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
+    schema: dataform.projectConfig.vars.REPORTING_DATASET,
     description: "Table containing all captured page views",
     bigquery: {
         partitionBy: "event_date", // To improve query performance and control costs. You can only partition based on one dimension.
