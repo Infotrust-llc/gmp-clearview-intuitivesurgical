@@ -7,7 +7,6 @@ config {
   tags:[dataform.projectConfig.vars.GA4_DATASET,"daily_performance","prod"],
   bigquery: {
     partitionBy: "session_date"
-    // labels: require("includes/core/helpers.js").helpers.storageLabels()
   },
 }
 
@@ -16,6 +15,9 @@ js {
     const config = helpers.getConfig();
 }
 
+  -- ==============================
+  --            PRE-OPERATIONS 
+  -- ==============================
 /* incrementality */
 pre_operations {
   declare date_checkpoint DATE;
@@ -24,17 +26,15 @@ pre_operations {
     ${when(incremental(),
       `select
         coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}
-      where is_final = true`,
+      from ${self()}`,
     `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
-    -- delete some older data, since this may be updated later by GA4
-  ${
-    when(incremental(),
-      `delete from ${self()} where session_date >= date_checkpoint`
-      )
-  }
+
 }
+
+  -- ==============================
+  --            QUERY
+  -- ==============================
     select
       session_date,
       stream_id,

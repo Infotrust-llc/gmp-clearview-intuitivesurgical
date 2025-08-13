@@ -12,6 +12,30 @@ config {
     columns: require("includes/core/documentation/helpers.js").ga4Events
 }
 
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+
+  -- ==============================
+  --            PRE-OPERATIONS 
+  -- ==============================
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select
+        coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
+      from ${self()}`,
+    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+
+}
+  -- ==============================
+  --           QUERY
+  -- ==============================
 
 SELECT * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, video_impression_count,
         video_complete_count,  video_start_count, video_watch_time, video_start, video_complete),
@@ -27,7 +51,8 @@ SELECT * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, video_impressi
         SUM(video_complete) video_complete
 FROM (
     SELECT * FROM  (
-        SELECT  event_name,
+        SELECT  
+        event_name,
         event_date, session_id, user_pseudo_id, 
         continent, country, region, city, 
         page_location, cross_channel_campaign.default_channel_group,

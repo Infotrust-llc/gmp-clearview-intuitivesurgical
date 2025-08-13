@@ -1,8 +1,3 @@
-  /*
-  This file is part of "GMP Clearview" package.
-  Copyright (C)  2025 Infotrust 
-  Alina Zilbergerts, Trish Dothkar,
-  -- */
 
 config {
   type: "incremental",
@@ -28,7 +23,9 @@ js {
 
 }
 
-
+  -- ==============================
+  --            PRE - OPERATIONS
+  -- ==============================
 
 /* incrementality */
 pre_operations {
@@ -40,16 +37,10 @@ pre_operations {
         ${when(incremental(),
         `select
             coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-        from ${self()}
-        where is_final = true`,
+        from ${self()}`,
         `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
     );
-    -- delete some older data, since this may be updated later by GA4
-  ${
-    when(incremental(),
-      `delete from ${self()} where event_date = date_checkpoint`
-      )
-  }
+
 }
 
   -- ==============================
@@ -141,17 +132,17 @@ from query_source
 where true
 
 
-post_operations {
-    -- TO DO: implement dynamic table name - how?
-    ${when(incremental(),
-        `EXPORT DATA OPTIONS(
-            uri=(CONCAT('gs://${dataform.projectConfig.vars.GCS_BUCKET}/',  format_date( "%Y%m%d", date_checkpoint), '/ga4_engagements_*.json')), 
-            format='JSON',
-            overwrite=true
-            ) AS
+-- post_operations {
+--     -- TO DO: implement dynamic table name - how?
+--     ${when(incremental(),
+--         `EXPORT DATA OPTIONS(
+--             uri=(CONCAT('gs://${dataform.projectConfig.vars.GCS_BUCKET}/',  format_date( "%Y%m%d", date_checkpoint), '/ga4_engagements_*.json')), 
+--             format='JSON',
+--             overwrite=true
+--             ) AS
 
-            SELECT * FROM ${self()} WHERE event_date = date_checkpoint  
-            ORDER BY _run_timestamp LIMIT 1000000000000000000`
+--             SELECT * FROM ${self()} WHERE event_date = date_checkpoint  
+--             ORDER BY _run_timestamp LIMIT 1000000000000000000`
 
-        )
-}
+--         )
+-- }

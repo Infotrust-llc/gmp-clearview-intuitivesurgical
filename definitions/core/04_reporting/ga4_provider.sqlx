@@ -22,6 +22,11 @@ js {
   const config = helpers.getConfig();
 }
 
+
+  -- ==============================
+  --            PRE OPERATIONS
+  -- ==============================
+
 /* incrementality */
 pre_operations {
   declare date_checkpoint DATE;
@@ -30,16 +35,9 @@ pre_operations {
     ${when(incremental(),
       `select
         coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}
-      where is_final = true`,
+      from ${self()}`,
     `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
-    -- delete some older data, since this may be updated later by GA4
-  ${
-    when(incremental(),
-      `delete from ${self()} where event_date >= date_checkpoint`
-      )
-  }
 }
 
   -- ==============================
@@ -93,18 +91,19 @@ FROM (
           )
         group by all
 
-   post_operations {
-  ${when(incremental(),
-    `EXPORT DATA OPTIONS(
-        uri=(CONCAT('gs://${dataform.projectConfig.vars.GCS_BUCKET}/', date_checkpoint, '/${self().name}_',date_checkpoint, '_*.json')), 
-        format='JSON',
-        overwrite=true,
-        header=true
-       ) AS
 
-          SELECT DISTINCT * FROM (        -- Overhead SLEECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
-          SELECT * FROM ${self()} WHERE event_date = date_checkpoint
-          )
-          ORDER BY _run_timestamp LIMIT 1000000000000000000`
-  )
-  }
+  --  post_operations {
+  -- ${when(incremental(),
+  --   `EXPORT DATA OPTIONS(
+  --       uri=(CONCAT('gs://${dataform.projectConfig.vars.GCS_BUCKET}/', date_checkpoint, '/${self().name}_',date_checkpoint, '_*.json')), 
+  --       format='JSON',
+  --       overwrite=true,
+  --       header=true
+  --      ) AS
+
+  --         SELECT DISTINCT * FROM (        -- Overhead SLEECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+  --         SELECT * FROM ${self()} WHERE event_date = date_checkpoint
+  --         )
+  --         ORDER BY _run_timestamp LIMIT 1000000000000000000`
+  -- )
+  -- }

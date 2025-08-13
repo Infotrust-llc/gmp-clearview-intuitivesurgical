@@ -20,28 +20,22 @@ js {
 }
 
   -- ==============================
-  --        PRE-OPERATIONS
+  --            PRE-OPERATIONS 
   -- ==============================
-  -- Note that pre_operations blocks will only work via the "Start Execution" button and not via the "Run" button
-
+/* incrementality */
 pre_operations {
-  declare date_checkpoint DATE
-  ---
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
       `select
         coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}
-      where is_final = true`,
+      from ${self()}`,
     `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
-    -- delete some older data, since this may be updated later by GA4
-  ${
-    when(incremental(),
-      `delete from ${self()} where event_date >= date_checkpoint`
-      )
-  }
+
 }
+
 
   -- ==============================
   --            QUERY

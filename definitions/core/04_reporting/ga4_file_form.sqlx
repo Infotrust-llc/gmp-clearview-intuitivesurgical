@@ -13,6 +13,29 @@ config {
     columns: require("includes/core/documentation/helpers.js").ga4Events
 }
 
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+
+  -- ==============================
+  --            PRE-OPERATIONS 
+  -- ==============================
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select
+        coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
+      from ${self()}`,
+    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+
+}
+
+
 SELECT * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, 
         form_submission_attempt_count, 
         form_submission_complete_count,

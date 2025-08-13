@@ -18,6 +18,11 @@ js {
     const config = helpers.getConfig();
 }
 
+
+  -- ==============================
+  --            QUERY
+  -- ==============================
+  
 /* incrementality */
 pre_operations {
   declare date_checkpoint DATE;
@@ -26,20 +31,14 @@ pre_operations {
     ${when(incremental(),
       `select
         coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}
-      where is_final = true`,
+      from ${self()}`,
     `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
-    -- delete some older data, since this may be updated later by GA4
-  ${
-    when(incremental(),
-      `delete from ${self()} where session_date >= date_checkpoint`
-      )
-  }
 }
 
--- simple sessions: referrers as is, no Last Non Direct - 1 source per session (the first no null)
-
+  -- ==============================
+  --            QUERY
+  -- ==============================
 with events as (
   select
     '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,

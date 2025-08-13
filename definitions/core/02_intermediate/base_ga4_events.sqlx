@@ -27,27 +27,25 @@ js {
 
 }
 
-/* incrementality */
---pre_operations {
-  -- declare params string default (${json_custom_params}); 
-  declare date_checkpoint DATE;
-  -- set @@query_label = "${helpers.executionLabels()}";
+  -- ==============================
+  --        PRE-OPERATIONS
+  -- ==============================
+pre_operations {
+  declare date_checkpoint DATE
+  ---
   set date_checkpoint = (
     ${when(incremental(),
       `select
         coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}
-      where is_final = true`,
-    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+      from ${self()}`,
+    `select date('${config.GA4_START_DATE}')`)} 
   );
-    -- delete some older data, since this may be updated later by GA4
-  ${
-    when(incremental(),
-      `delete from ${self()} where event_date >= date_checkpoint`
-      )
-  }
---}
+   
+}
 
+  -- ==============================
+  --        QUERY
+  -- ==============================
 with query_source as (
 
     select
@@ -520,11 +518,6 @@ fixed as (
 add_meta_info as (
   select
       '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
-      -- make session_id - can be NULL (if anonymous ping or MP hit without session_id)
-    -- farm_fingerprint(
-    --   user_pseudo_id || event_params.ga_session_id
-    --  ) as session_id,
-  -- coalesce(  -- AZ THIS IS A BUG - cannot coalesce user_pseudo_id and ga_session_id
   concat(
       user_pseudo_id , CAST(event_params.ga_session_id AS STRING)
      ) as session_id,
@@ -559,7 +552,6 @@ add_meta_info as (
       --  event_params.content_group as content_group
       ) as page,
 
-    -- is this a hit with source? Or: not direct/none or when we have a source or medium
     case
         when (fixed_traffic_source.source != 'direct' and fixed_traffic_source.medium != 'none') then true
         when (coalesce(fixed_traffic_source.source, fixed_traffic_source.medium) is not null) then true
@@ -617,19 +609,24 @@ select
 from add_row_numbers
 where true
 
-post_operations {
-  ${when(incremental(),
-    `EXPORT DATA OPTIONS(
-        uri=(CONCAT('gs://${config.GCS_BUCKET}/', date_checkpoint, '/${self().name}_',date_checkpoint, '_*.json')), 
-        format='JSON',
-        overwrite=true,
-        header=true
-       ) AS
 
-          SELECT DISTINCT * FROM (        -- Overhead SLEECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
-          SELECT * FROM ${self()} WHERE event_date = date_checkpoint
-          )
-          ORDER BY _run_timestamp LIMIT 1000000000000000000`
-  )
-  }
+  -- ==============================
+  --        POST-OPERATIONS
+  -- ==============================
+-- post_operations {
+--   ${when(incremental(),
+--     `EXPORT DATA OPTIONS(
+--         uri=(CONCAT('gs://${config.GCS_BUCKET}/', date_checkpoint, '/${self().name}_',date_checkpoint, '_*.parquet')), 
+--         format='PARQUET',
+--         overwrite=true,
+--         header=true
+--        ) AS
+
+--           SELECT DISTINCT * FROM (        -- Overhead SELECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+--           SELECT * FROM ${self()} WHERE event_date = date_checkpoint
+--           )
+--           ORDER BY _run_timestamp LIMIT 1000000000000000000`
+--   )
+--   }
+-- }
 

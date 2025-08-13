@@ -210,7 +210,7 @@ const generateArrayAggSQL = (
   paramName,
   columnName = false,
   orderTypeAsc = true,
-  orderBy = "event_timestamp,batch_event_index",
+  orderBy = "event_timestamp",
 ) => {
   const alias =
     columnName === null ? "" : `AS ${columnName ? columnName : paramName} `;
