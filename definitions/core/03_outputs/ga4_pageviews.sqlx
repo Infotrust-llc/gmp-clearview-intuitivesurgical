@@ -1,4 +1,5 @@
-config {
+  
+  config {
     type: "incremental",
     tags: [dataform.projectConfig.vars.GA4_DATASET, "pages", "prod"],
     database: dataform.projectConfig.vars.OUTPUT_PROJECT,
@@ -22,8 +23,6 @@ js {
   -- ==============================
   --        PRE-OPERATIONS
   -- ==============================
-  -- Note that pre_operations blocks will only work via the "Start Execution" button and not via the "Run" button
-
 pre_operations {
   declare date_checkpoint DATE
   ---
@@ -31,16 +30,10 @@ pre_operations {
     ${when(incremental(),
       `select
         coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}
-      where is_final = true`,
-    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+      from ${self()}`,
+    `select date('${config.GA4_START_DATE}')`)} 
   );
-    -- delete some older data, since this may be updated later by GA4
-  ${
-    when(incremental(),
-      `delete from ${self()} where event_date >= date_checkpoint`
-      )
-  }
+   
 }
 
   -- ==============================
@@ -52,6 +45,7 @@ SELECT
   stream_id,
   event_date,
   event_timestamp,
+  batch_event_index,
   -- create page ID
 --   farm_fingerprint(
 --     time.event_timestamp ||
@@ -81,13 +75,8 @@ SELECT
   geo,
   app_info,
   platform,
-  -- ${helpers.generateArrayAggSQL('user_id', false, false)},
-  -- ${helpers.generateArrayAggSQL('device')},
-  -- ${helpers.generateArrayAggSQL('geo')},
-  -- ${helpers.generateArrayAggSQL('app_info')},
-  -- ${helpers.generateArrayAggSQL('platform')},
 
-  session_traffic_source_last_click,
+  session_traffic_source_last_click.cross_channel_campaign,
 
    STRUCT(
     page.location,
@@ -99,26 +88,6 @@ SELECT
     event_params.content_id,
     event_params.content_type) 
   as page,
-  -- CASE
-  --   WHEN REGEXP_CONTAINS(page.path, r'\/da\/|\/de\/|\/en\/|\/es\/|\/fi\/|\/fr\/|\/it\/|\/nl\/|\/no\/|\/pt\/|\/sv\/') THEN RIGHT(REGEXP_REPLACE(regexp_replace(page.path, r'^https?://[^/]+', ''),r'[\?#].*',''), LENGTH(REGEXP_REPLACE(regexp_replace(page.path, r'^https?://[^/]+', ''),r'[\?#].*',''))-3)
-  --   ELSE REGEXP_REPLACE(regexp_replace(page.path,
-  --     r'^https?://[^/]+',
-  --     ''),r'[\?#].*','')
-  --   END
-  -- AS page_path_cleaned,
-  -- STRUCT( ${helpers.generateArrayAggSQL('page.location', 'page_location')},
-  --   ${helpers.generateArrayAggSQL('page.path', 'page_path')},
-  --   ${helpers.generateArrayAggSQL('page.hostname', 'page_hostname')},
-  --   ${helpers.generateArrayAggSQL('page.referrer', 'page_referrer')},
-  --   ${helpers.generateArrayAggSQL('event_params.content_group', 'content_group')},
-  --   ${helpers.generateArrayAggSQL('event_params.content_id', 'content_id')},
-  --   ${helpers.generateArrayAggSQL('event_params.content_type', 'content_type')}
-  --    ) 
-  --   AS page,
-
-  -- ${helpers.generateArrayAggSQL('session_traffic_source_last_click', 'session_traffic_source_last_click')},
-
-
   -- METRICS
 
   -- Interaction metrics
@@ -154,7 +123,8 @@ WHERE  event_date >= date_checkpoint
 
 )
 
-select *  
+select
+  current_timestamp() as _run_timestamp, -- indicates when the row was last run
+  *
 from query_source
-
-
+where true

@@ -1,0 +1,74 @@
+config {
+  type: "incremental",
+  //materialized: true ,
+  tags: [dataform.projectConfig.vars.GA4_DATASET,"navigation","prod"],
+  database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+  schema: dataform.projectConfig.vars.REPORTING_DATASET,
+  description: "Navigation events summary table with metrics",
+  bigquery: {
+    partitionBy: "event_date",
+    //clusterBy: ["event_name", "event_id"],
+    labels: require("includes/core/helpers.js").helpers.storageLabels()
+  },
+    columns: require("includes/core/documentation/helpers.js").ga4Events
+}
+
+
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+
+  -- ==============================
+  --            PRE-OPERATIONS 
+  -- ==============================
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select
+        coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
+      from ${self()}`,
+    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+
+}
+
+SELECT * EXCEPT(session_id, user_pseudo_id, engagement_time_msec,
+                outbound_general_link_click_count, outbound_tel_link_click_count,
+                outbound_mailto_link_click_count,outbound_social_link_click_count ),
+
+      COUNT(DISTINCT session_id) sessions,
+      COUNT(DISTINCT user_pseudo_id) users,
+      SUM(outbound_general_link_click_count) outbound_general_link_click_count,
+      SUM(outbound_tel_link_click_count) outbound_tel_link_click_count,
+      SUM(outbound_mailto_link_click_count) outbound_mailto_link_click_count,
+      SUM(outbound_social_link_click_count) outbound_social_link_click_count,
+      SUM(engagement_time_msec)/1000 engagement_time_sec
+FROM (
+      SELECT * FROM (
+        SELECT  
+        event_date, event_name, 
+        continent, country, region, city, page_location, cross_channel_campaign.default_channel_group,
+        location, header,carousel_action,
+        outbound_link_type, link_format,
+        click_text, click_url, cta_text, cta_url,
+        session_id, user_pseudo_id, 
+
+      -- Metrics
+        outbound_general_link_click_count, outbound_tel_link_click_count,
+        outbound_mailto_link_click_count, outbound_social_link_click_count,
+        engagement_time_msec
+
+
+        FROM ${ref("ga4_engagements")}
+      )
+        PIVOT 
+        (
+          COUNT(event_name) FOR event_name IN ('cta_click', 'click', 'navigation_click', "carousel_click", "accordion_click", 
+          "provider_locator_cta_click", "provider_locator_get_directions_click", "provider_locator_tel_click", "internal_link_click")
+        )
+)
+group by all
