@@ -3,7 +3,8 @@ config {
   uniqueKey: ['session_id'],
   description: "Output table for understanding daily overall performance",
   database: dataform.projectConfig.vars.OUTPUT_PROJECT,
-    schema: dataform.projectConfig.vars.REPORTING_DATASET,
+  schema: dataform.projectConfig.vars.REPORTING_DATASET,
+  name: "ga4_daily_performance",
   tags:[dataform.projectConfig.vars.GA4_DATASET,"daily_performance","prod"],
   bigquery: {
     partitionBy: "session_date"
@@ -33,18 +34,42 @@ pre_operations {
 }
 
   -- ==============================
+  --        POST-OPERATIONS
+  -- ==============================
+post_operations {
+    ${when(incremental(),
+    `EXPORT DATA OPTIONS(
+        uri=(CONCAT('gs://${config.GCS_BUCKET}/',  FORMAT_DATE('%Y%m%d' , date_checkpoint), '_gcp_', '${name()}', '_*.parquet')), 
+        format='PARQUET',
+        overwrite=true
+       ) AS
+
+          SELECT DISTINCT * FROM (        -- Overhead SELECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+          SELECT * FROM ${self()} WHERE event_date = date_checkpoint
+          )
+          ORDER BY _run_timestamp LIMIT 1000000000000000000; `
+    )}
+}
+
+  -- ==============================
   --            QUERY
   -- ==============================
     select
       session_date,
       stream_id,
-      device,
-      geo,
-      app_info,
+      device.category as device_category,
+      device.operating_system as operating_system,
+      geo.continent as continent, 
+      geo.country as country, 
+      geo.region as region, 
+      geo.city as city,
+      app_info.firebase_app_id as firebase_app_id,
       platform,
-      cross_channel_campaign,
-      landing_page,
-      exit_page,
+      cross_channel_campaign.source as session_source,
+      cross_channel_campaign.medium as session_medium,
+      cross_channel_campaign.default_channel_group as default_channel_group,
+      landing_page.landing_page_path as landing_page_path,
+      exit_page.exit_page_path as exit_page_path,
       user_type,
       count(distinct session_id) as sessions,
       countif(is_engaged_session) as engaged_sessions,
@@ -66,7 +91,7 @@ pre_operations {
       sum(provider_locator_search_result_selected) as provider_locator_search_result_selected,
       sum(provider_locator_tel_click) as provider_locator_tel_click,
       sum(video_complete) as video_complete,
-      sum(video_start ) as video_start,
+      sum(video_start) as video_start,
     from ${ref("ga4_sessions")}
     group by 
      session_date,

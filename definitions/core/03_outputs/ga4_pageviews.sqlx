@@ -4,6 +4,7 @@
     tags: [dataform.projectConfig.vars.GA4_DATASET, "pages", "prod"],
     database: dataform.projectConfig.vars.OUTPUT_PROJECT,
     schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
+    name: "ga4_pageviews",
     description: "Table containing all captured page views",
     bigquery: {
         partitionBy: "event_date", // To improve query performance and control costs. You can only partition based on one dimension.
@@ -33,7 +34,24 @@ pre_operations {
       from ${self()}`,
     `select date('${config.GA4_START_DATE}')`)} 
   );
-   
+}
+
+  -- ==============================
+  --        POST-OPERATIONS
+  -- ==============================
+post_operations {
+    ${when(incremental(),
+    `EXPORT DATA OPTIONS(
+        uri=(CONCAT('gs://${config.GCS_BUCKET}/',  FORMAT_DATE('%Y%m%d' , date_checkpoint), '_gcp_', '${name()}', '_*.parquet')), 
+        format='PARQUET',
+        overwrite=true
+       ) AS
+
+          SELECT DISTINCT * FROM (        -- Overhead SELECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+          SELECT * FROM ${self()} WHERE event_date = date_checkpoint
+          )
+          ORDER BY _run_timestamp LIMIT 1000000000000000000; `
+    )}
 }
 
   -- ==============================
@@ -45,7 +63,7 @@ SELECT
   stream_id,
   event_date,
   event_timestamp,
-  batch_event_index,
+  batch.batch_event_index,
   -- create page ID
 --   farm_fingerprint(
 --     time.event_timestamp ||
