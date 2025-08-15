@@ -1,6 +1,6 @@
 config {
   type: "incremental",
-  uniqueKey: ['session_id'],
+  uniqueKey: ['session_date'],
   description: "Output table for understanding daily overall performance",
   database: dataform.projectConfig.vars.OUTPUT_PROJECT,
   schema: dataform.projectConfig.vars.REPORTING_DATASET,
