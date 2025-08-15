@@ -94,6 +94,7 @@ post_operations {
       sum(video_complete) as video_complete,
       sum(video_start) as video_start,
     from ${ref("ga4_sessions")}
+    where session_date >= date_checkpoint
     group by 
      session_date,
       stream_id,
