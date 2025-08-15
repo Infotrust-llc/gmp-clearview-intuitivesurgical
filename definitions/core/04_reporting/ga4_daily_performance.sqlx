@@ -55,6 +55,7 @@ post_operations {
   --            QUERY
   -- ==============================
     select
+      current_timestamp() as _run_timestamp, -- indicates when the row was last run
       session_date,
       stream_id,
       device.category as device_category,

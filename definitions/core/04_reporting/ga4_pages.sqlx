@@ -128,7 +128,7 @@ WHERE  event_date >= date_checkpoint
 )
 
 
-select * 
+select current_timestamp() as _run_timestamp, * 
 from query_source
 
 

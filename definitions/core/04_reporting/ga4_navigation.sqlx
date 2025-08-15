@@ -29,8 +29,7 @@ pre_operations {
 --   set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
-      `select
-        coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
+      `select coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
       from ${self()}`,
     `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
@@ -56,7 +55,8 @@ post_operations {
 }
 
 
-SELECT * EXCEPT(session_id, user_pseudo_id, engagement_time_msec,
+SELECT current_timestamp() as _run_timestamp, -- indicates when the row was last run
+        * EXCEPT(session_id, user_pseudo_id, engagement_time_msec,
                 outbound_general_link_click_count, outbound_tel_link_click_count,
                 outbound_mailto_link_click_count,outbound_social_link_click_count ),
 

@@ -57,7 +57,8 @@ post_operations {
   --            QUERY
   -- ==============================
 
-SELECT * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, num_search_results ),
+SELECT current_timestamp() as _run_timestamp, ,
+        * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, num_search_results ),
 
       COUNT(DISTINCT session_id) sessions,
       COUNT(DISTINCT user_pseudo_id) users,

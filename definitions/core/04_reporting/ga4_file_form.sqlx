@@ -56,7 +56,8 @@ post_operations {
 
 
 
-SELECT * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, 
+SELECT current_timestamp() as _run_timestamp, -- indicates when the row was last run
+        * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, 
         form_submission_attempt_count, 
         form_submission_complete_count,
         form_submission_failure_count,
