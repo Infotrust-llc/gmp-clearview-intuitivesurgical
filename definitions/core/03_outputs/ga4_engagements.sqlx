@@ -5,6 +5,7 @@ config {
   tags: [dataform.projectConfig.vars.GA4_DATASET,"events","prod"],
   database: dataform.projectConfig.vars.OUTPUT_PROJECT,
   schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
+  name: "ga4_engagements",
   description: "Output events table: unnested, cleaned, clustered data with several fixes",
   bigquery: {
     partitionBy: "event_date",
@@ -26,7 +27,6 @@ js {
   -- ==============================
   --            PRE - OPERATIONS
   -- ==============================
-
 /* incrementality */
 pre_operations {
     declare  table_name STRING ;
@@ -42,7 +42,23 @@ pre_operations {
     );
 
 }
+  -- ==============================
+  --        POST-OPERATIONS
+  -- ==============================
+post_operations {
+    ${when(incremental(),
+    `EXPORT DATA OPTIONS(
+        uri=(CONCAT('gs://${config.GCS_BUCKET}/',  FORMAT_DATE('%Y%m%d' , date_checkpoint), '_gcp_', '${name()}', '_*.parquet')), 
+        format='PARQUET',
+        overwrite=true
+       ) AS
 
+          SELECT DISTINCT * FROM (        -- Overhead SELECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+          SELECT * FROM ${self()} WHERE event_date = date_checkpoint
+          )
+          ORDER BY session_id LIMIT 1000000000000000000; `
+    )}
+}
   -- ==============================
   --            QUERY
   -- ==============================
@@ -131,18 +147,3 @@ select
 from query_source
 where true
 
-
--- post_operations {
---     -- TO DO: implement dynamic table name - how?
---     ${when(incremental(),
---         `EXPORT DATA OPTIONS(
---             uri=(CONCAT('gs://${dataform.projectConfig.vars.GCS_BUCKET}/',  format_date( "%Y%m%d", date_checkpoint), '/ga4_engagements_*.json')), 
---             format='JSON',
---             overwrite=true
---             ) AS
-
---             SELECT * FROM ${self()} WHERE event_date = date_checkpoint  
---             ORDER BY _run_timestamp LIMIT 1000000000000000000`
-
---         )
--- }

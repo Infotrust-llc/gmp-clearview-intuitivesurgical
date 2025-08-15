@@ -5,12 +5,13 @@ config {
   description: "Intermediate incremental sessions table with modeling helpers implemented. 1 row per unique session_id. Contains only valid sessions.",
   database: dataform.projectConfig.vars.OUTPUT_PROJECT,
   schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
+  name: "ga4_sessions",
   tags:[dataform.projectConfig.vars.GA4_DATASET,"sessions","prod"],
   bigquery: {
     partitionBy: "session_date",
-    clusterBy: [ "session_id" ],
+    clusterBy: [ "session_id" ]
     // labels: require("includes/core/helpers.js").helpers.storageLabels()
-  },
+  }
 }
 
 js {
@@ -20,7 +21,7 @@ js {
 
 
   -- ==============================
-  --            QUERY
+  --            PRE-OPERATIONS
   -- ==============================
   
 /* incrementality */
@@ -35,7 +36,23 @@ pre_operations {
     `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
 }
+  -- ==============================
+  --        POST-OPERATIONS
+  -- ==============================
+post_operations {
+    ${when(incremental(),
+    `EXPORT DATA OPTIONS(
+        uri=(CONCAT('gs://${config.GCS_BUCKET}/',  FORMAT_DATE('%Y%m%d' , date_checkpoint), '_gcp_', '${name()}', '_*.parquet')), 
+        format='PARQUET',
+        overwrite=true
+       ) AS
 
+          SELECT DISTINCT * FROM (        -- Overhead SELECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+          SELECT * FROM ${self()} WHERE session_date = date_checkpoint
+          )
+          ORDER BY session_id LIMIT 1000000000000000000; `
+    )}
+}
   -- ==============================
   --            QUERY
   -- ==============================
@@ -160,6 +177,7 @@ add_meta_info as (
 )
 
 select
+    current_timestamp() as _run_timestamp, -- indicates when the row was last run
   *  except(is_multiday_session)
 from add_meta_info
 where (

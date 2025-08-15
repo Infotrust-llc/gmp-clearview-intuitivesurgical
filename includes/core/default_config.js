@@ -598,6 +598,8 @@ const ASSERTIONS_TABLES_TIMELINESS = true;
 const ASSERTIONS_TRANSACTION_ID_COMPLETENESS = true;
 const ASSERTIONS_USER_PSEUDO_ID_COMPLETENESS = true;
 
+ //GCS bucketlist 
+ GCS_BUCKET = ["gmp_clearview_export_uat"];
 
 // deduplicate transactions?
 const TRANSACTIONS_DEDUPE = false;
@@ -704,7 +706,9 @@ const coreConfig = {
     CUSTOM_URL_PARAMS_ARRAY,
     TRANSACTIONS_DEDUPE,
     TRANSACTION_TOTALS_UID,
-    TABLES_OUTPUT
+    TABLES_OUTPUT,
+    GCS_BUCKET 
+
 }
 
 module.exports = {

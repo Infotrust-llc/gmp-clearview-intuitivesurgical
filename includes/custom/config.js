@@ -456,7 +456,7 @@ CUSTOM_USER_PROPERTIES_ARRAY: [
   ASSERTIONS_USER_PSEUDO_ID_COMPLETENESS: false,
 
   //GCS bucketlist 
- GCS_BUCKET : ["gmp_clearview_export"]
+ GCS_BUCKET : ["gmp_clearview_export_uat"]
 
 }
 

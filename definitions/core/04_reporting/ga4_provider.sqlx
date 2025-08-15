@@ -1,14 +1,9 @@
-  /*
-  This file is part of "GMP Clearview" package.
-  Copyright (C)  2025 Infotrust 
-  Alina Zilbergerts, Trish Dothkar,
-  -- */
-
 config {
   type: "incremental",
   tags: [dataform.projectConfig.vars.GA4_DATASET,"provider","prod"],
   database: dataform.projectConfig.vars.OUTPUT_PROJECT,
   schema: dataform.projectConfig.vars.REPORTING_DATASET,
+  name:"ga4_provider",
   description: "Provider events table: with metrics",
   bigquery: {
     partitionBy: "event_date",
@@ -38,6 +33,24 @@ pre_operations {
       from ${self()}`,
     `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
+}
+
+  -- ==============================
+  --        POST-OPERATIONS
+  -- ==============================
+post_operations {
+    ${when(incremental(),
+    `EXPORT DATA OPTIONS(
+        uri=(CONCAT('gs://${config.GCS_BUCKET}/',  FORMAT_DATE('%Y%m%d' , date_checkpoint), '_gcp_', '${name()}', '_*.parquet')), 
+        format='PARQUET',
+        overwrite=true
+       ) AS
+
+          SELECT DISTINCT * FROM (        -- Overhead SELECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+          SELECT * FROM ${self()} WHERE event_date = date_checkpoint
+          )
+          ORDER BY _run_timestamp LIMIT 1000000000000000000; `
+    )}
 }
 
   -- ==============================

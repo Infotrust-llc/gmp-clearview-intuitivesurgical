@@ -3,6 +3,7 @@ config {
     tags: [dataform.projectConfig.vars.GA4_DATASET, "pages", "prod"],
     database: dataform.projectConfig.vars.OUTPUT_PROJECT,
     schema: dataform.projectConfig.vars.REPORTING_DATASET,
+    name:"ga4_pages",
     description: "Table containing all captured page views",
     bigquery: {
         partitionBy: "event_date", // To improve query performance and control costs. You can only partition based on one dimension.
@@ -35,6 +36,23 @@ pre_operations {
   );
 
 }
+  -- ==============================
+  --        POST-OPERATIONS
+  -- ==============================
+post_operations {
+    ${when(incremental(),
+    `EXPORT DATA OPTIONS(
+        uri=(CONCAT('gs://${config.GCS_BUCKET}/',  FORMAT_DATE('%Y%m%d' , date_checkpoint), '_gcp_', '${name()}', '_*.parquet')), 
+        format='PARQUET',
+        overwrite=true
+       ) AS
+
+          SELECT DISTINCT * FROM (        -- Overhead SELECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+          SELECT * FROM ${self()} WHERE event_date = date_checkpoint
+          )
+          ORDER BY _run_timestamp LIMIT 1000000000000000000; `
+    )}
+}
 
 
   -- ==============================
@@ -56,12 +74,18 @@ SELECT
     coalesce(page.location, "")
 ) as page_id,
 
-  -- first
-  ${helpers.generateArrayAggSQL('device')},
-  ${helpers.generateArrayAggSQL('geo')},
-  ${helpers.generateArrayAggSQL('app_info')},
-  ${helpers.generateArrayAggSQL('platform')},
-  ${helpers.generateArrayAggSQL('session_traffic_source_last_click', 'session_traffic_source_last_click')},
+      device.category as device_category,
+      device.operating_system as operating_system,
+      geo.continent as continent, 
+      geo.country as country, 
+      geo.region as region, 
+      geo.city as city,
+      app_info.firebase_app_id as firebase_app_id,
+      platform,
+      cross_channel_campaign.source as session_source,
+      cross_channel_campaign.medium as session_medium,
+      cross_channel_campaign.default_channel_group as default_channel_group,
+      user.user_type as user_type,
 
   CASE
     WHEN REGEXP_CONTAINS(page.path, r'\/da\/|\/de\/|\/en\/|\/es\/|\/fi\/|\/fr\/|\/it\/|\/nl\/|\/no\/|\/pt\/|\/sv\/') THEN RIGHT(REGEXP_REPLACE(regexp_replace(page.path, r'^https?://[^/]+', ''),r'[\?#].*',''), LENGTH(REGEXP_REPLACE(regexp_replace(page.path, r'^https?://[^/]+', ''),r'[\?#].*',''))-3)
@@ -70,16 +94,11 @@ SELECT
       ''),r'[\?#].*','')
     END
   AS page_path_cleaned,
-  STRUCT( ${helpers.generateArrayAggSQL('page.location', 'page_location')},
-    ${helpers.generateArrayAggSQL('page.path', 'page_path')},
-    ${helpers.generateArrayAggSQL('page.title', 'page_title')},
-    ${helpers.generateArrayAggSQL('page.hostname', 'page_hostname')},
-    ${helpers.generateArrayAggSQL('page.referrer', 'page_referrer')},
-    ${helpers.generateArrayAggSQL('page.content_group', 'content_group')},
-    ${helpers.generateArrayAggSQL('page.content_id', 'content_id')},
-    ${helpers.generateArrayAggSQL('page.content_type', 'content_type')}
-     ) 
-    AS page,
+    page.location as page_URL,
+    page.path as page_path,
+    page.title as page_title,
+    page.hostname as page_hostname,
+    page.referrer as page_referrer,
 
 
   -- METRICS

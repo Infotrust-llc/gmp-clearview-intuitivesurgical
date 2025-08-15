@@ -35,12 +35,29 @@ pre_operations {
   ---
   set date_checkpoint = (
     ${when(incremental(),
-      `select
-        coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}`,
+        `select
+            coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
+        from ${self()}`,
     `select date('${config.GA4_START_DATE}')`)} 
   );
-   
+}
+
+  -- ==============================
+  --        POST-OPERATIONS
+  -- ==============================
+post_operations {
+    ${when(incremental(),
+    `EXPORT DATA OPTIONS(
+        uri=(CONCAT('gs://${config.GCS_BUCKET}/',  FORMAT_DATE('%Y%m%d' , date_checkpoint), '_gcp_', '${name()}', '_*.parquet')), 
+        format='PARQUET',
+        overwrite=true
+       ) AS
+
+          SELECT DISTINCT * FROM (        -- Overhead SELECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
+          SELECT * FROM ${self()} WHERE event_date = date_checkpoint
+          )
+          ORDER BY _run_timestamp LIMIT 1000000000000000000; `
+    )}
 }
 
   -- ==============================
@@ -52,7 +69,7 @@ with query_source as (
       _table_suffix as table_suffix,
       *
     from ${ref("events_*")}
-
+    
     where true
 
     -- incrementality clause
@@ -610,23 +627,4 @@ from add_row_numbers
 where true
 
 
-  -- ==============================
-  --        POST-OPERATIONS
-  -- ==============================
--- post_operations {
---   ${when(incremental(),
---     `EXPORT DATA OPTIONS(
---         uri=(CONCAT('gs://${config.GCS_BUCKET}/', date_checkpoint, '/${self().name}_',date_checkpoint, '_*.parquet')), 
---         format='PARQUET',
---         overwrite=true,
---         header=true
---        ) AS
-
---           SELECT DISTINCT * FROM (        -- Overhead SELECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
---           SELECT * FROM ${self()} WHERE event_date = date_checkpoint
---           )
---           ORDER BY _run_timestamp LIMIT 1000000000000000000`
---   )
---   }
--- }
 
