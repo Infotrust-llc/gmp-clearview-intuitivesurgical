@@ -56,7 +56,7 @@ post_operations {
   --           QUERY
   -- ==============================
 
-SELECT current_timestamp() as _run_timestamp, ,
+SELECT current_timestamp() as _run_timestamp, 
       * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, video_impression_count,
         video_complete_count,  video_start_count, video_watch_time, video_start, video_complete),
 
