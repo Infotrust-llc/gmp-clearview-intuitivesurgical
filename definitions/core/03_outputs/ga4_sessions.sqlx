@@ -174,7 +174,8 @@ add_meta_info as (
 
     -- cross_channel_campaign.*
   from events
-)
+),
+final as (
 
 select
     current_timestamp() as _run_timestamp, -- indicates when the row was last run
@@ -183,5 +184,9 @@ from add_meta_info
 where (
   session_date >= date_checkpoint -- new sessions
   or is_multiday_session -- or older sessions from yesterday
-)
+))
 -- could be some incremental duplicates, these will be discarded downstream
+-- select session_id,
+--  ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY _run_timestamp DESC) as rn
+--  from final
+select * from final
