@@ -18,6 +18,13 @@ config {
 js {
     const { helpers } = require("includes/core/helpers");
     const config = helpers.getConfig();
+
+    var dateFilter = "" ;
+  if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+    dateFilter = ` event_date = date_checkpoint `;
+  } else { 
+    dateFilter = ` event_date >= date_checkpoint `;
+  }
 }
 
   -- ==============================
@@ -26,14 +33,36 @@ js {
 /* incrementality */
 pre_operations {
   declare date_checkpoint DATE;
---   set @@query_label = "${helpers.executionLabels()}";
-  set date_checkpoint = (
-    ${when(incremental(),
-      `select coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}`,
-    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
-  );
+    ---  // this triple dash means something in dataform?
 
+  -- this is for when we need to refill for certain date
+  IF '${dataform.projectConfig.vars.RUN_FOR_DATE}' <> 'undefined' THEN 
+    set date_checkpoint = (
+      ${when(incremental(), 
+          `select date('${dataform.projectConfig.vars.RUN_FOR_DATE}')`, 
+          `select date('${config.GA4_START_DATE}')`
+           )
+      });
+      -- delete some older data, since this may be updated later by GA4
+      ${
+        when(incremental(),
+          `delete from ${self()} where event_date = date_checkpoint;`
+          )
+      }
+  ELSE
+      set date_checkpoint = (
+        ${when(incremental(),
+        `select coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
+            from ${self()} where is_final is True`,
+        `select date('${config.GA4_START_DATE}')`)} 
+      );
+      -- delete some older data, since this may be updated later by GA4
+      ${
+        when(incremental(),
+          `delete from ${self()} where event_date >= date_checkpoint;`
+          )
+      }
+    END IF;
 }
 
   -- ==============================
@@ -66,7 +95,8 @@ SELECT current_timestamp() as _run_timestamp, -- indicates when the row was last
       SUM(outbound_tel_link_click_count) outbound_tel_link_click_count,
       SUM(outbound_mailto_link_click_count) outbound_mailto_link_click_count,
       SUM(outbound_social_link_click_count) outbound_social_link_click_count,
-      SUM(engagement_time_msec)/1000 engagement_time_sec
+      SUM(engagement_time_msec)/1000 engagement_time_sec,
+
 FROM (
       SELECT * FROM (
         SELECT  
@@ -80,10 +110,12 @@ FROM (
       -- Metrics
         outbound_general_link_click_count, outbound_tel_link_click_count,
         outbound_mailto_link_click_count, outbound_social_link_click_count,
-        engagement_time_msec
+        engagement_time_msec,
+        is_final
 
 
         FROM ${ref("ga4_engagements")}
+        WHERE event_date = date_checkpoint
       )
         PIVOT 
         (

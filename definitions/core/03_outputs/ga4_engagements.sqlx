@@ -21,7 +21,13 @@ js {
   const config = helpers.getConfig();
   /* check if there's invalid columns or dupe columns in the custom column definitions */
   helpers.checkColumnNames(config);
-
+  
+  var dateFilter = "" ;
+  if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+    dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) = date_checkpoint `;
+  } else { 
+    dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint `;
+  }
 }
 
   -- ==============================
@@ -29,18 +35,37 @@ js {
   -- ==============================
 /* incrementality */
 pre_operations {
-    declare  table_name STRING ;
-    declare date_checkpoint DATE;
+  declare date_checkpoint DATE;
+    ---  // this triple dash means something in dataform?
 
-    -- set @@query_label = "${helpers.executionLabels()}";
+  -- this is for when we need to refill for certain date
+  IF '${dataform.projectConfig.vars.RUN_FOR_DATE}' <> 'undefined' THEN 
     set date_checkpoint = (
+      ${when(incremental(), 
+          `select date('${dataform.projectConfig.vars.RUN_FOR_DATE}')`, 
+          `select date('${config.GA4_START_DATE}')`
+           )
+      });
+      -- delete some older data, since this may be updated later by GA4
+      ${
+        when(incremental(),
+          `delete from ${self()} where event_date = date_checkpoint;`
+          )
+      }
+  ELSE
+      set date_checkpoint = (
         ${when(incremental(),
-        `select
-            coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-        from ${self()}`,
-        `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
-    );
-
+        `select coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
+            from ${self()} where is_final is True`,
+        `select date('${config.GA4_START_DATE}')`)} 
+      );
+      -- delete some older data, since this may be updated later by GA4
+      ${
+        when(incremental(),
+          `delete from ${self()} where event_date >= date_checkpoint;`
+          )
+      }
+    END IF;
 }
   -- ==============================
   --        POST-OPERATIONS
@@ -58,6 +83,8 @@ post_operations {
           )
           ORDER BY session_id LIMIT 1000000000000000000; `
     )}
+
+    
 }
   -- ==============================
   --            QUERY
@@ -136,7 +163,7 @@ SELECT event_date, event_name, event_id,
     is_final 
 
  FROM ${ref("base_ga4_events")} 
-WHERE event_date = date_checkpoint
+WHERE event_date >= date_checkpoint
 and REGEXP_CONTAINS(event_name, r'file|click|video|form|provider')
 
 )

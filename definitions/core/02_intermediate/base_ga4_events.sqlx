@@ -25,21 +25,51 @@ js {
   const fieldnames_sql = helpers.getEventParamKeysArray(config, ref("events_*"), "event_params");
   const base_tbl = self();
 
+  var dateFilter = "" ;
+  if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+    dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) = date_checkpoint `;
+  } else { 
+    dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint `;
+  }
 }
 
   -- ==============================
   --        PRE-OPERATIONS
   -- ==============================
 pre_operations {
-  declare date_checkpoint DATE
-  ---
-  set date_checkpoint = (
-    ${when(incremental(),
-        `select
-            coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-        from ${self()}`,
-    `select date('${config.GA4_START_DATE}')`)} 
-  );
+  declare date_checkpoint DATE;
+    ---  // this triple dash means something in dataform?
+
+  -- this is for when we need to refill for certain date
+  IF '${dataform.projectConfig.vars.RUN_FOR_DATE}' <> 'undefined' THEN 
+    set date_checkpoint = (
+      ${when(incremental(), 
+          `select date('${dataform.projectConfig.vars.RUN_FOR_DATE}')`, 
+          `select date('${config.GA4_START_DATE}')`
+           )
+      });
+      -- delete some older data, since this may be updated later by GA4
+      ${
+        when(incremental(),
+          `delete from ${self()} where event_date = date_checkpoint;`
+          )
+      }
+  ELSE
+      set date_checkpoint = (
+        ${when(incremental(),
+        `select coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
+            from ${self()} where is_final is True`,
+        `select date('${config.GA4_START_DATE}')`)} 
+      );
+      -- delete some older data, since this may be updated later by GA4
+      ${
+        when(incremental(),
+          `delete from ${self()} where event_date >= date_checkpoint;`
+          )
+      }
+    END IF;
+
+   
 }
 
   -- ==============================
@@ -74,7 +104,8 @@ with query_source as (
 
     -- incrementality clause
     -- and parse_date('%Y%m%d', regexp_extract(event_date,'[0-9]+')) >= date_checkpoint -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
-    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) = date_checkpoint
+    and ${dateFilter}
+    -- parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) = date_checkpoint
     -- filters go here
 
     -- intraday filter: exclude

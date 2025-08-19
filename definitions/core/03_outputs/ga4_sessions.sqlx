@@ -17,6 +17,13 @@ config {
 js {
     const { helpers } = require("includes/core/helpers");
     const config = helpers.getConfig();
+
+      var dateFilter = "" ;
+    if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+      dateFilter = ` event_date between date_checkpoint -1 and date_checkpoint `;
+    } else { 
+      dateFilter = ` event_date >= date_checkpoint -1  `;
+    }
 }
 
 
@@ -27,14 +34,36 @@ js {
 /* incrementality */
 pre_operations {
   declare date_checkpoint DATE;
---   set @@query_label = "${helpers.executionLabels()}";
-  set date_checkpoint = (
-    ${when(incremental(),
-      `select
-        coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}`,
-    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
-  );
+    ---  // this triple dash means something in dataform?
+
+  -- this is for when we need to refill for certain date
+  IF '${dataform.projectConfig.vars.RUN_FOR_DATE}' <> 'undefined' THEN 
+    set date_checkpoint = (
+      ${when(incremental(), 
+          `select date('${dataform.projectConfig.vars.RUN_FOR_DATE}')`, 
+          `select date('${config.GA4_START_DATE}')`
+           )
+      });
+      -- delete some older data, since this may be updated later by GA4
+      ${
+        when(incremental(),
+          `delete from ${self()} where session_date = date_checkpoint;`
+          )
+      }
+  ELSE
+      set date_checkpoint = (
+        ${when(incremental(),
+        `select coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
+            from ${self()} where is_final is True`,
+        `select date('${config.GA4_START_DATE}')`)} 
+      );
+      -- delete some older data, since this may be updated later by GA4
+      ${
+        when(incremental(),
+          `delete from ${self()} where sssion_date >= date_checkpoint;`
+          )
+      }
+    END IF;
 }
   -- ==============================
   --        POST-OPERATIONS
