@@ -12,5 +12,6 @@ vars:
   INPUT_PROJECT: intuitive-web-ga4-bigquery
   TABLE_SUFFIX:  _
   GCS_BUCKET: gmp_clearview_export_uat
-  RUN_FOR_DATE: "2025-07-15"
+  RUN_FOR_DATE: "2025-07-02"
+  EXPORT_TO_GCS: no
 

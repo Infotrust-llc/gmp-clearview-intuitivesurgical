@@ -87,41 +87,53 @@ post_operations {
   -- ==============================
 
 SELECT current_timestamp() as _run_timestamp, 
-        * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, num_search_results ),
+        * EXCEPT(session_id, user_pseudo_id, provider_search_result_selected_count, engagement_time_msec
+                        -- provider_link_click_count, provider_directions_link_click_count
+                         ),
 
       COUNT(DISTINCT session_id) sessions,
       COUNT(DISTINCT user_pseudo_id) users,
-      SUM(num_search_results) num_search_results,
+      SUM(provider_search_result_selected_count) provider_search_result_selected_count,
+      -- SUM(provider_link_click_count) provider_link_click_count,
+      -- SUM(provider_directions_link_click_count) provider_directions_link_click_count,
+      -- SUM(content_estimated_read_time) content_estimated_read_time,
       SUM(engagement_time_msec)/1000 engagement_time_sec
 FROM (
         SELECT  
         event_date, session_id, user_pseudo_id, event_name,
-        continent, country, region, city, page_location, 
+        continent, country, region, city,  
         cross_channel_campaign.default_channel_group,
-        location, header, 
-        cta_text, cta_url,
+
+        page_location, location, header, cta_text, cta_url,
 
         provider_procedure, 
         provider_search,
         provider_distance,
-        sort_by,
+        -- provider_specialty,
+        provider_location, 
         provider_search_result,
-        provider_search_result_selected_count,
 
-        search_term,
-        search_type,
-        search_filter,
-        search_result,
+        
+
+        -- sort_by,
+        -- search_term,
+        -- search_type,
+        -- search_filter,
+        -- search_result,
+        -- num_search_results,
 
         -- Metrics
-        num_search_results,
+
+        provider_search_result_selected_count,
+        -- provider_link_click_count,
+        -- provider_directions_link_click_count,
+        -- content_estimated_read_time,
         engagement_time_msec,
 
         is_final
 
-
         FROM ${ref("ga4_engagements")}
-        where event_date >= date_checkpoint
+        where event_date = date_checkpoint
         )
         PIVOT 
         (
@@ -135,8 +147,9 @@ FROM (
           )
         group by all
 
-
+/*
   --  post_operations {
+    -- IF vars.EXPORT_TO_GCS = 'yes'
   -- ${when(incremental(),
   --   `EXPORT DATA OPTIONS(
   --       uri=(CONCAT('gs://${dataform.projectConfig.vars.GCS_BUCKET}/', date_checkpoint, '/${self().name}_',date_checkpoint, '_*.json')), 
@@ -151,3 +164,4 @@ FROM (
   --         ORDER BY _run_timestamp LIMIT 1000000000000000000`
   -- )
   -- }
+  */

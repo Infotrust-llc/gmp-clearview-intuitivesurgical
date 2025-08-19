@@ -143,18 +143,26 @@ SELECT event_date, event_name, event_id,
     event_params_custom.outbound_tel_link_click_count,
 
   -- Provider related event paraeters
+
     event_params_custom.provider_procedure, 
     event_params_custom.provider_search,
     event_params_custom.provider_distance,
-    event_params_custom.sort_by,
+    -- event_params_custom.provider_specialty,
+    COALESCE(CAST(url_params_custom.location AS STRING), CAST(event_params_custom.provider_location AS STRING)) provider_location,
     event_params_custom.provider_search_result,
     event_params_custom.provider_search_result_selected_count,
 
+    -- event_params_custom.provider_link_click_count,
+    -- event_params_custom.provider_directions_link_click_count,
+    -- event_params_custom.content_estimated_read_time,
+
+    -- Search
     event_params_custom.search_term,
     event_params_custom.search_type,
     event_params_custom.search_filter,
     event_params_custom.search_result,
     event_params_custom.num_search_results,
+    event_params_custom.sort_by,
 
     event_params_custom.previous_url,
     event_params_custom.external_referrer,
@@ -163,7 +171,7 @@ SELECT event_date, event_name, event_id,
     is_final 
 
  FROM ${ref("base_ga4_events")} 
-WHERE event_date >= date_checkpoint
+WHERE event_date = date_checkpoint
 and REGEXP_CONTAINS(event_name, r'file|click|video|form|provider')
 
 )

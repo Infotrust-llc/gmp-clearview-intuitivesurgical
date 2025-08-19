@@ -406,7 +406,11 @@ CUSTOM_USER_PROPERTIES_ARRAY: [
   //   ],
 
 
-  CUSTOM_URL_PARAMS_ARRAY: [    { name: "location", cleaningMethod: lowerSQL }],
+  CUSTOM_URL_PARAMS_ARRAY: [    
+  { name: "location", cleaningMethod: lowerSQL }, 
+  { name: "procedure", cleaningMethod: lowerSQL },
+  { name: "search", cleaningMethod: lowerSQL }
+  ],
 
   // filters
   // array: list the event names you want to exclude from the events table 
