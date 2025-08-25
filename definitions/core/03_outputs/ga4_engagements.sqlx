@@ -1,4 +1,10 @@
 
+ /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
 config {
   type: "incremental",
   // disabled: true, // this is a temp table to create other engagment breakdown tables 

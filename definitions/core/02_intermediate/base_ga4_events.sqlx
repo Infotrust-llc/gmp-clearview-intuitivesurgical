@@ -58,7 +58,8 @@ pre_operations {
       set date_checkpoint = (
         ${when(incremental(),
         `select coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
-            from ${self()} where is_final is True`,
+            from ${self()} 
+            where is_final is True`,
         `select date('${config.GA4_START_DATE}')`)} 
       );
       -- delete some older data, since this may be updated later by GA4
