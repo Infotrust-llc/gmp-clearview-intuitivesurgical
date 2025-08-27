@@ -139,7 +139,7 @@ FROM (
         is_final
 
         FROM ${ref("ga4_engagements")}
-        where event_date = date_checkpoint
+        where  ${dateFilter}      --event_date = date_checkpoint
         )
         PIVOT 
         (

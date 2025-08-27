@@ -167,7 +167,7 @@ SELECT
   is_final 
 FROM
   ${ref("base_ga4_events")}
-WHERE  event_date >= date_checkpoint 
+WHERE  ${dateFilter}    --event_date >= date_checkpoint 
   AND event_name = 'page_view'
 -- only hits with user_pseudo_id and session_id
   -- and user_pseudo_id is not null

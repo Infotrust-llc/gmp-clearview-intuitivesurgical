@@ -154,7 +154,7 @@ SELECT
   MIN(is_final) AS is_final,            --return false if even 1 event is not final
 FROM
   ${ref("ga4_pageviews")}
-WHERE  event_date >= date_checkpoint 
+WHERE  ${dateFilter}          --event_date >= date_checkpoint 
 -- only hits with user_pseudo_id and session_id
   -- and user.user_pseudo_id is not null
   -- and session_id is not null

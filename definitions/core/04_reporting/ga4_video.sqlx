@@ -130,7 +130,8 @@ FROM (
         is_final
 
         FROM ${ref("ga4_engagements")}
-        WHERE event_name IN ("video_start", "video_complete")
+        WHERE  ${dateFilter}  AND
+                event_name IN ("video_start", "video_complete")
     )
         PIVOT 
         (

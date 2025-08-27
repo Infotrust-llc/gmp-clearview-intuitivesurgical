@@ -65,7 +65,7 @@ pre_operations {
       -- delete some older data, since this may be updated later by GA4
       ${
         when(incremental(),
-          `delete from ${self()} where sssion_date >= date_checkpoint;`
+          `delete from ${self()} where session_date >= date_checkpoint;`
           )
       }
     END IF;
@@ -171,7 +171,7 @@ with events as (
     -- ) as session_info
 
   from   ${ref("base_ga4_events")}
-  where event_date >= date_checkpoint -1 -- grab 1 extra day, to include sessions starting earlier
+  where  ${dateFilter}     --event_date >= date_checkpoint -1 -- grab 1 extra day, to include sessions starting earlier
 
   -- only hits with user_pseudo_id and session_id
   and user_pseudo_id is not null

@@ -126,7 +126,8 @@ FROM (
         is_final
 
         FROM ${ref("ga4_engagements")}
-
+        WHERE ${dateFilter}     
+        
       )
         PIVOT 
         (

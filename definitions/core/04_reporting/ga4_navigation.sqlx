@@ -121,7 +121,7 @@ FROM (
 
 
         FROM ${ref("ga4_engagements")}
-        WHERE event_date = date_checkpoint
+        WHERE  ${dateFilter}            --event_date >= date_checkpoint
       )
         PIVOT 
         (

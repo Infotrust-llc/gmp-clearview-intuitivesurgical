@@ -30,9 +30,9 @@ js {
   
   var dateFilter = "" ;
   if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
-    dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) = date_checkpoint `;
+    dateFilter = ` event_date = date_checkpoint `;
   } else { 
-    dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint `;
+    dateFilter = ` event_date >= date_checkpoint `;
   }
 }
 
@@ -177,7 +177,7 @@ SELECT event_date, event_name, event_id,
     is_final 
 
  FROM ${ref("base_ga4_events")} 
-WHERE event_date = date_checkpoint
+WHERE ${dateFilter}   --event_date >= date_checkpoint
 and REGEXP_CONTAINS(event_name, r'file|click|video|form|provider')
 
 )
