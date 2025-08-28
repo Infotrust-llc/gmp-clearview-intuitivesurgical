@@ -20,8 +20,10 @@
 
 const ga4Events = require("includes/core/documentation/ga4_events.json");
 const ga4Sessions = require("includes/core/documentation/ga4_sessions.json");
-const ga4Transactions = require("includes/core/documentation/ga4_transactions.json");
+const ga4Navigation = require("includes/core/documentation/ga4_navigation.json");
 const ga4Provider = require("includes/core/documentation/ga4_provider.json");
+const ga4Video = require("includes/core/documentation/ga4_video.json");
+const ga4FileForm = require("includes/core/documentation/ga4_file_form.json");
 
 const { helpers } = require("includes/core/helpers");
 const config = helpers.getConfig();
@@ -86,6 +88,8 @@ config.CUSTOM_ITEM_PARAMS_ARRAY.forEach((param) => {
 module.exports = {
   ga4Events,
   ga4Sessions,
-  ga4Transactions,
+  ga4Navigation,
+  ga4Video,
+  ga4FileForm,    
   ga4Provider
 };
