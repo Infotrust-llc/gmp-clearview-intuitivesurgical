@@ -102,7 +102,7 @@ SELECT event_date, event_name, event_id,
     user_pseudo_id, session_id,
 
     geo.*,
-    page.location as page_location, 
+    page.location as page_location,
     page.* except(location),
     session_traffic_source_last_click.cross_channel_campaign,
 
