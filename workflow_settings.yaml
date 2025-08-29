@@ -12,5 +12,5 @@ vars:
   TABLE_SUFFIX:  _
   GCS_BUCKET: gmp_clearview_export_uat
   EXPORT_TO_GCS: yes
-  RUN_FOR_DATE: 2025-08-27
+ // RUN_FOR_DATE: 2025-08-27
 
