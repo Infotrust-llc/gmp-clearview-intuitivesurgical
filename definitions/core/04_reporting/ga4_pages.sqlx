@@ -76,7 +76,7 @@ pre_operations {
 post_operations {
     ${when(incremental(),
     `EXPORT DATA OPTIONS(
-        uri=(CONCAT('gs://${config.GCS_BUCKET}/',  FORMAT_DATE('%Y%m%d' , date_checkpoint), '_gcp_', '${name()}', '_*.parquet')), 
+        uri=(CONCAT('gs://${config.GCS_BUCKET}/${dataform.projectConfig.vars.REPORTING_DATASET}/',  FORMAT_DATE('%Y%m%d' , date_checkpoint), '_gcp_', '${name()}', '_*.parquet')), 
         format='PARQUET',
         overwrite=true
        ) AS
