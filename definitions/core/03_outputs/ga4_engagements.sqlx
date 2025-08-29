@@ -123,7 +123,7 @@ SELECT event_date, event_name, event_id,
     -- Video related parameters
     event_params_custom.video_title, 
     event_params_custom.video_provider,
-    event_params_custom.video_url,
+    CAST(event_params_custom.video_url AS STRING) video_url,
     event_params_custom.video_play_type,
     event_params_custom.video_duration,
     event_params_custom.video_percent,
