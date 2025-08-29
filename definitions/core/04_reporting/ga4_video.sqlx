@@ -91,12 +91,12 @@ post_operations {
   -- ==============================
 
 SELECT current_timestamp() as _run_timestamp, 
-      * EXCEPT(session_id, user_pseudo_id, engagement_time_msec, video_impression_count,
+      * EXCEPT(engagement_time_msec, video_impression_count,
         video_complete_count,  video_start_count, video_watch_time, video_start, video_complete),
 
-        COUNT(DISTINCT session_id) sessions,
-        COUNT(DISTINCT user_pseudo_id) users,
-        -- SUM(video_impression_count) video_impression_count,
+        -- COUNT(DISTINCT session_id) sessions,     -cant sum up here, cause aggregation even by date will inflate numbers
+        -- COUNT(DISTINCT user_pseudo_id) users,
+        SUM(video_impression_count) video_impression_count,
         SUM(video_watch_time) video_watch_time,
         SUM(video_start_count) video_start_count,
         SUM(video_complete_count) video_complete_count,
@@ -110,12 +110,16 @@ FROM (
         event_name,
         event_date, session_id, user_pseudo_id, 
         continent, country, region, city, 
-        page_location, cross_channel_campaign.default_channel_group,
+        -- Clean page location
+        SPLIT(page_location, "?")[SAFE_OFFSET(0)] as page_location, 
+        cross_channel_campaign.default_channel_group,
+        cross_channel_campaign.source, 
+        cross_channel_campaign.medium, 
+        cross_channel_campaign.campaign_name,
 
-        location, header,
         video_title, 
         video_provider,
-        video_url,
+        SPLIT(CAST(video_url AS STRING), "?")[SAFE_OFFSET(0)] video_url, 
         video_play_type,
         video_duration,
         video_percent,
