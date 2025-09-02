@@ -91,12 +91,10 @@ post_operations {
 
 
 SELECT current_timestamp() as _run_timestamp, -- indicates when the row was last run
-        * EXCEPT(session_id, user_pseudo_id, engagement_time_msec,
+        * EXCEPT(engagement_time_msec,
                 outbound_general_link_click_count, outbound_tel_link_click_count,
-                outbound_mailto_link_click_count,outbound_social_link_click_count ),
+                outbound_mailto_link_click_count, outbound_social_link_click_count ),
 
-      COUNT(DISTINCT session_id) sessions,
-      COUNT(DISTINCT user_pseudo_id) users,
       SUM(outbound_general_link_click_count) outbound_general_link_click_count,
       SUM(outbound_tel_link_click_count) outbound_tel_link_click_count,
       SUM(outbound_mailto_link_click_count) outbound_mailto_link_click_count,
@@ -106,12 +104,19 @@ SELECT current_timestamp() as _run_timestamp, -- indicates when the row was last
 FROM (
       SELECT * FROM (
         SELECT  
-        event_date, event_name, 
-        continent, country, region, city, page_location, cross_channel_campaign.default_channel_group,
-        location, header,carousel_action,
+        event_date, session_id, user_pseudo_id, event_name, 
+        continent, country, region, city, 
+        SPLIT(page_location, "?")[SAFE_OFFSET(0)] as page_location, 
+        cross_channel_campaign.default_channel_group,
+        cross_channel_campaign.source, 
+        cross_channel_campaign.medium, 
+        cross_channel_campaign.campaign_name,
+        location, header,
+        carousel_action,
         outbound_link_type, link_format,
-        click_text, click_url, cta_text, cta_url,
-        session_id, user_pseudo_id, 
+        click_text, click_url, 
+        cta_text, cta_url,
+        
 
       -- Metrics
         outbound_general_link_click_count, outbound_tel_link_click_count,
@@ -126,7 +131,8 @@ FROM (
         PIVOT 
         (
           COUNT(event_name) FOR event_name IN ('cta_click', 'click', 'navigation_click', "carousel_click", "accordion_click", 
-          "provider_locator_cta_click", "provider_locator_get_directions_click", "provider_locator_tel_click", "internal_link_click")
+          "provider_locator_cta_click", "provider_locator_get_directions_click", "provider_locator_tel_click", "internal_link_click", 
+          "view_outcomes_click")
         )
 )
 group by all

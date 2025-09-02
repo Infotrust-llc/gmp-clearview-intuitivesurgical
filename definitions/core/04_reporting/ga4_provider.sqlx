@@ -93,12 +93,10 @@ post_operations {
   -- ==============================
 
 SELECT current_timestamp() as _run_timestamp, 
-        * EXCEPT(session_id, user_pseudo_id, provider_search_result_selected_count, engagement_time_msec
+        * EXCEPT(provider_search_result_selected_count, engagement_time_msec
                         -- provider_link_click_count, provider_directions_link_click_count
                          ),
 
-      COUNT(DISTINCT session_id) sessions,
-      COUNT(DISTINCT user_pseudo_id) users,
       SUM(provider_search_result_selected_count) provider_search_result_selected_count,
       -- SUM(provider_link_click_count) provider_link_click_count,
       -- SUM(provider_directions_link_click_count) provider_directions_link_click_count,
@@ -109,8 +107,12 @@ FROM (
         event_date, session_id, user_pseudo_id, event_name,
         continent, country, region, city,  
         cross_channel_campaign.default_channel_group,
+        cross_channel_campaign.source, 
+        cross_channel_campaign.medium, 
+        cross_channel_campaign.campaign_name,
 
-        page_location, location, header, cta_text, cta_url,
+        SPLIT(page_location, "?")[SAFE_OFFSET(0)] as page_location, 
+        location, header, cta_text, cta_url,
 
         provider_procedure, 
         provider_search,
