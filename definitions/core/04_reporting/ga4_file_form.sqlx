@@ -5,7 +5,7 @@
   -- */
 
 config {
-  type: "incremental",
+  type: "view",
   //materialized: true ,
   tags: [dataform.projectConfig.vars.GA4_DATASET,"file_form","prod"],
   database: dataform.projectConfig.vars.OUTPUT_PROJECT,
@@ -126,7 +126,7 @@ FROM (
         is_final
 
         FROM ${ref("ga4_engagements")}
-        WHERE ${dateFilter}     
+        -- WHERE ${dateFilter}     
         
       )
         PIVOT 
