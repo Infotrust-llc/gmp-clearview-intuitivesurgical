@@ -25,7 +25,7 @@ js {
     const config = helpers.getConfig();
 
     var dateFilter = "" ;
-  if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+  if (dataform.projectConfig.vars.RUN_FOR_DATE != undefined) {
     dateFilter = ` event_date = date_checkpoint `;
   } else { 
     dateFilter = ` event_date >= date_checkpoint `;
@@ -57,7 +57,7 @@ pre_operations {
       }
   ELSE
       set date_checkpoint = (
-        ${when(incremental()  || '${type()}' == 'view', 
+        ${when(incremental(),   
         `select coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
             from ${self()} where is_final is True`,
         `select date('${config.GA4_START_DATE}')`)} 
@@ -127,7 +127,7 @@ FROM (
         is_final
 
         FROM ${ref("ga4_engagements")}
-        -- WHERE ${dateFilter}     
+        WHERE ${dateFilter}     
         
       )
         PIVOT 

@@ -24,7 +24,7 @@ js {
     const config = helpers.getConfig();
 
     var dateFilter = "" ;
-  if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+  if (dataform.projectConfig.vars.RUN_FOR_DATE != undefined) {
     dateFilter = ` event_date = date_checkpoint `;
   } else { 
     dateFilter = ` event_date >= date_checkpoint `;
@@ -91,23 +91,18 @@ post_operations {
   -- ==============================
 
 SELECT current_timestamp() as _run_timestamp, 
-      * EXCEPT(engagement_time_msec, video_impression_count,
-        video_complete_count,  video_start_count, video_watch_time, video_start, video_complete),
+      * EXCEPT(engagement_time_msec,event_timestamp_utc),
+      -- , video_impression_count,
+      --   video_complete_count,  video_start_count, video_watch_time, video_start, video_complete),
 
         -- COUNT(DISTINCT session_id) sessions,     -cant sum up here, cause aggregation even by date will inflate numbers
         -- COUNT(DISTINCT user_pseudo_id) users,
-        SUM(video_impression_count) video_impression_count,
-        SUM(video_watch_time) video_watch_time,
-        SUM(video_start_count) video_start_count,
-        SUM(video_complete_count) video_complete_count,
-        SUM(engagement_time_msec)/1000 engagement_time_sec,
-        SUM(video_start) video_start,
-        SUM(video_complete) video_complete,
+      (engagement_time_msec)/1000 engagement_time_sec
 
 FROM (
     SELECT * FROM  (
         SELECT  
-        event_name,
+        event_name,event_timestamp_utc,
         event_date, session_id, user_pseudo_id, 
         continent, country, region, city, 
         -- Clean page location
@@ -126,20 +121,21 @@ FROM (
         video_current_time,
     
         --Metrics
-        video_impression_count,
-        video_complete_count,
-        video_start_count,
-        video_watch_time,
-        engagement_time_msec,
+        SUM(video_impression_count) video_impression_count,
+        SUM(video_complete_count) video_complete_count,
+        sum(video_start_count) video_start_count,
+        SUM(video_watch_time) video_watch_time,
+        SUM(engagement_time_msec) engagement_time_msec,
         is_final
 
         FROM ${ref("ga4_engagements")}
         WHERE  ${dateFilter}  AND
                 event_name IN ("video_start", "video_complete")
+        GROUP BY ALL
     )
         PIVOT 
         (
           COUNT(*) FOR event_name IN ("video_start", "video_complete")
         )
 )
-group by all
+

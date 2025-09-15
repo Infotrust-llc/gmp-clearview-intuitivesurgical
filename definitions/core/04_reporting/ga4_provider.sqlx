@@ -23,7 +23,7 @@ js {
   const config = helpers.getConfig();
 
   var dateFilter = "" ;
-  if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+  if (dataform.projectConfig.vars.RUN_FOR_DATE != undefined) {
     dateFilter = ` event_date = date_checkpoint `;
   } else { 
     dateFilter = ` event_date >= date_checkpoint `;
@@ -93,15 +93,15 @@ post_operations {
   -- ==============================
 
 SELECT current_timestamp() as _run_timestamp, 
-        * EXCEPT(provider_search_result_selected_count, engagement_time_msec
-                        -- provider_link_click_count, provider_directions_link_click_count
+        * EXCEPT ( engagement_time_msec
+                        --(provider_search_result_selected_count,  provider_link_click_count, provider_directions_link_click_count
                          ),
 
-      SUM(provider_search_result_selected_count) provider_search_result_selected_count,
+    --   SUM(provider_search_result_selected_count) provider_search_result_selected_count,
       -- SUM(provider_link_click_count) provider_link_click_count,
       -- SUM(provider_directions_link_click_count) provider_directions_link_click_count,
       -- SUM(content_estimated_read_time) content_estimated_read_time,
-      SUM(engagement_time_msec)/1000 engagement_time_sec
+      engagement_time_msec/1000 engagement_time_sec
 FROM (
         SELECT  
         event_date, session_id, user_pseudo_id, event_name,
@@ -155,21 +155,3 @@ FROM (
           )
         group by all
 
-/*
-  --  post_operations {
-    -- IF vars.EXPORT_TO_GCS = 'yes'
-  -- ${when(incremental(),
-  --   `EXPORT DATA OPTIONS(
-  --       uri=(CONCAT('gs://${dataform.projectConfig.vars.GCS_BUCKET}/', date_checkpoint, '/${self().name}_',date_checkpoint, '_*.json')), 
-  --       format='JSON',
-  --       overwrite=true,
-  --       header=true
-  --      ) AS
-
-  --         SELECT DISTINCT * FROM (        -- Overhead SLEECT DISTINCT and LIMIT are aded to fix the issue with producting multiple export files insteand of one
-  --         SELECT * FROM ${self()} WHERE event_date = date_checkpoint
-  --         )
-  --         ORDER BY _run_timestamp LIMIT 1000000000000000000`
-  -- )
-  -- }
-  */

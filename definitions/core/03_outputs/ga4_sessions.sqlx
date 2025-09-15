@@ -24,7 +24,7 @@ js {
     const config = helpers.getConfig();
 
       var dateFilter = "" ;
-    if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+    if (dataform.projectConfig.vars.RUN_FOR_DATE != undefined) {
       dateFilter = ` event_date between date_checkpoint -1 and date_checkpoint `;
     } else { 
       dateFilter = ` event_date >= date_checkpoint -1  `;

@@ -13,4 +13,4 @@ vars:
   GCS_BUCKET: gmp_clearview_export_uat
   EXPORT_TO_GCS: yes
   EXPORT_FILE_FORMAT: parquet
-  # RUN_FOR_DATE: 2025-08-31
+  # RUN_FOR_DATE: 2025-08-25

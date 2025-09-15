@@ -26,7 +26,7 @@ js {
   const base_tbl = self();
 
   var dateFilter = "" ;
-  if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+  if (dataform.projectConfig.vars.RUN_FOR_DATE != undefined) {
     dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) = date_checkpoint `;
   } else { 
     dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint `;
