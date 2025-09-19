@@ -29,7 +29,7 @@ js {
   if (dataform.projectConfig.vars.RUN_FOR_DATE != undefined) {
     dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) = date_checkpoint `;
   } else { 
-    dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint `;
+    dateFilter = `parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+'))  >= date_checkpoint `; /* between date_checkpoint and date_end `;*/
   }
 }
 
@@ -38,6 +38,8 @@ js {
   -- ==============================
 pre_operations {
   declare date_checkpoint DATE;
+  DECLARE date_end DATE;
+  set date_end='2025-09-15';
     ---  // this triple dash means something in dataform?
 
   -- this is for when we need to refill for certain date

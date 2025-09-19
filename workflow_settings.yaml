@@ -10,7 +10,7 @@ vars:
   REPORTING_DATASET: gmp_reporting_273569072 
   INPUT_PROJECT: intuitive-web-ga4-bigquery
   TABLE_SUFFIX:  _
-  GCS_BUCKET: gmp_clearview_export_uat
+  GCS_BUCKET: gmp_clearview_export
   EXPORT_TO_GCS: yes
   EXPORT_FILE_FORMAT: parquet
-  # RUN_FOR_DATE: 2025-08-25
+  # RUN_FOR_DATE: 2025-09-17

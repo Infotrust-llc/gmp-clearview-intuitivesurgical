@@ -91,22 +91,14 @@ post_operations {
 }
 
 SELECT current_timestamp() as _run_timestamp, -- indicates when the row was last run
-        * EXCEPT(engagement_time_msec, 
-        form_submission_attempt_count, 
-        form_submission_complete_count,
-        form_submission_failure_count,
-        file_download_count),
+        * EXCEPT(engagement_time_msec,event_timestamp_utc),
 
-      SUM(file_download_count) file_download_count,
-      SUM(form_submission_attempt_count) form_submission_attempt_count,
-      SUM(form_submission_complete_count) form_submission_complete_count,
-      SUM(form_submission_failure_count) form_submission_failure_count,
-      SUM(engagement_time_msec)/1000 engagement_time_sec,
+      (engagement_time_msec)/1000 engagement_time_sec,
 
 FROM (
       SELECT * FROM (
         SELECT  
-        event_date, session_id, user_pseudo_id, event_name, 
+        event_date, session_id, user_pseudo_id, event_name, event_timestamp_utc,
         continent, country, region, city, 
         SPLIT(page_location, "?")[SAFE_OFFSET(0)] as page_location, 
         cross_channel_campaign.default_channel_group,
@@ -119,20 +111,20 @@ FROM (
         form_name,
     
         --Metrics
-        form_submission_attempt_count, 
-        form_submission_complete_count,
-        form_submission_failure_count,
-        file_download_count,
-        engagement_time_msec,
-        is_final
+        SUM(file_download_count) file_download_count,
+        SUM(form_submission_attempt_count) form_submission_attempt_count,
+        SUM(form_submission_complete_count) form_submission_complete_count,
+        SUM(form_submission_failure_count) form_submission_failure_count,
+        SUM(engagement_time_msec) engagement_time_msec,
+        MAX(is_final) is_final
 
         FROM ${ref("ga4_engagements")}
         WHERE ${dateFilter}     
-        
+        GROUP BY ALL
       )
         PIVOT 
         (
           COUNT(event_name) FOR event_name IN ("file_download", "form_submission_complete", "form_submission_start")
         )
 )
-group by all
+
