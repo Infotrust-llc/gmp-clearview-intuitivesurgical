@@ -26,7 +26,7 @@ js {
     helpers.checkColumnNames(config);
 
     var dateFilter = "" ;
-  if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+  if (dataform.projectConfig.vars.RUN_FOR_DATE != undefined) {
     dateFilter = ` event_date = date_checkpoint `;
   } else { 
     dateFilter = ` event_date >= date_checkpoint `;

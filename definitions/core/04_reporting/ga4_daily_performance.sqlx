@@ -21,7 +21,7 @@ js {
     const config = helpers.getConfig();
 
    var dateFilter = "" ;
-  if (dataform.projectConfig.vars.RUN_FOR_DATE != "") {
+  if (dataform.projectConfig.vars.RUN_FOR_DATE != undefined) {
     dateFilter = `session_date = date_checkpoint `;
   } else { 
     dateFilter = `session_date >= date_checkpoint `;
